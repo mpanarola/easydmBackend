@@ -13,7 +13,7 @@ exports.registration = async (req, res) => {
         data.avatar = avatar
         const userCheck = await User.findOne({ $and: [{ email: data.email }, { username: data.username }] })
         if (userCheck) {
-            return res.status(409).json({ message: 'User already exits!!' });
+            return res.json({ data: [], status: false, message: 'User already exits!!' });
         }
         data.userRole = 2
         // const password = Math.random().toString(36).slice(-8);
@@ -21,7 +21,7 @@ exports.registration = async (req, res) => {
         const userData = new User(data)
         const user1 = await userData.save()
         if (!user1) {
-            return res.status(400).json({ message: `User not Registered!!` })
+            return res.json({ data: [], status: false, message: `User not Registered!!` })
         }
         // transport.sendMail({
         //     to: data.email,
@@ -34,36 +34,21 @@ exports.registration = async (req, res) => {
         // if (!transport) {
         //     return res.status(404).json({ message: 'Somthing went wrong!!Can not sent mail to your emailid!!' })
         // }
-        // return res.status(200).json({ message: `User's registered successfully!! Mail sent to your emailid!!!` })
-        return res.status(200).json({ message: `User's registered successfully!!` })
+        // return res.json({data: [], status: true, message: `User's registered successfully!! Mail sent to your emailid!!!` })
+        return res.json({ data: [], status: true, message: `User's registered successfully!!` })
 
     }
     catch (error) {
-        return res.status(400).json({ message: error.message })
+        return res.json({ data: [], status: false, message: error.message })
     }
 
 }
-
-// exports.refreshToken = async (req, res) => {
-//     try {
-//         const { refreshToken, username, _id } = req.body
-//         if (refreshToken) {
-//             const token = jwt.sign({
-//                 username: username,
-//                 _id: _id.toString()
-//             }, process.env.SECRET_KEY, { expiresIn: '4h' })
-//             return res.status(200).json({ message: 'Login successfully!!', token: token })
-//         }
-//     } catch (error) {
-//         return res.status(400).json({ message: error.message })
-//     }
-// }
 
 exports.login = async (req, res) => {
     try {
         const { username, password } = req.body
         if (username === "") {
-            return res.status(409).json({ message: "Please enter username or emailID or mobileNo. to login!!!" })
+            return res.json({ data: [], status: false, message: "Please enter username or emailID or mobileNo. to login!!!" })
         }
         let filter = {
             $or: [
@@ -75,19 +60,19 @@ exports.login = async (req, res) => {
 
         let user = await User.findOne(filter)
         if (!user) {
-            return res.status(409).json({ message: 'User does not exist!!' });
+            return res.json({ data: [], status: false, message: 'User does not exist!!' });
         }
         const isMatch = await bcrypt.compare(password, user.password)
         if (!isMatch) {
-            return res.status(400).json({ message: 'Invalid password!!' });
+            return res.json({ data: [], status: false, message: 'Invalid password!!' });
         }
         const token = jwt.sign({
             username: user.username,
             _id: user._id.toString(),
         }, process.env.SECRET_KEY, { expiresIn: '5h' });
-        return res.status(200).json({ message: 'Login successfully!!', token: token })
+        return res.json({ data: [{ token: token }], status: true, message: 'Login successfully!!' })
     } catch (error) {
-        return res.status(400).json({ message: error.message })
+        return res.json({ data: [], status: false, message: error.message })
     }
 }
 
@@ -97,20 +82,20 @@ exports.me = async (req, res) => {
             .select('-password -__v -createdAt -updatedAt -wrongAttempt')
 
         if (!user) {
-            return res.status(409).json({ message: 'User does not exits!!' });
+            return res.json({ data: [], status: false, message: 'User does not exits!!' });
         }
-        return res.status(200).json({ data: user });
+        return res.json({ data: user, status: true, message: "" });
     } catch (error) {
-        return res.status(400).json({ message: error.message })
+        return res.json({ data: [], status: false, message: error.message })
     }
 }
 
 exports.listOfUsers = async (req, res) => {
     try {
         const users = await User.find({}).select('-password -__v -createdAt -updatedAt -wrongAttempt')
-        return res.status(200).json({ data: users });
+        return res.json({ data: [], status: true, data: users });
     } catch (error) {
-        return res.status(400).json({ message: error.message })
+        return res.json({ data: [], status: false, message: error.message })
     }
 }
 
@@ -119,7 +104,7 @@ exports.forgotPassLink = async (req, res) => {
         const { email } = req.body
         const user = await User.findOne({ email: email })
         if (!user) {
-            return res.status(400).json({ message: 'Email does no exist!!' })
+            return res.json({ data: [], status: false, message: 'Email does no exist!!' })
         }
         else {
             const cnt = user.wrongAttempt;
@@ -151,10 +136,10 @@ exports.forgotPassLink = async (req, res) => {
             if (!transport) {
                 return res.status(404).json({ message: 'Somthing went wrong!!Can not sent mail to your emailid!!' })
             }
-            return res.status(200).json({ message: 'Mail sent to your emailid!!!' })
+            return res.json({ data: [], status: true, message: 'Mail sent to your emailid!!!' })
         }
     } catch (error) {
-        return res.status(400).json({ message: error.message })
+        return res.json({ data: [], status: false, message: error.message })
     }
 }
 
@@ -166,12 +151,12 @@ exports.forgotPassword = async (req, res) => {
         let extime = (user.expireToken).getTime();
         let diff = extime - curTime;
         if (diff < 0) {
-            return res.status(400).json({ message: 'Link exprired!!, Please send again!!' })
+            return res.json({ data: [], status: false, message: 'Link exprired!!, Please send again!!' })
         }
         user.password = password;
         const updatePassword = await user.save()
         if (!updatePassword) {
-            return res.status(400).json({ message: 'Password is not updated!!' })
+            return res.json({ data: [], status: false, message: 'Password is not updated!!' })
         }
         await User.findOneAndUpdate({ email: user.email },
             {
@@ -179,9 +164,9 @@ exports.forgotPassword = async (req, res) => {
                 resetPasswordToken: "",
                 expireToken: ""
             })
-        return res.status(200).json({ message: 'Password Updated!!' })
+        return res.json({ data: [], status: true, message: 'Password Updated!!' })
     } catch (error) {
-        return res.status(400).json({ message: error.message })
+        return res.json({ data: [], status: false, message: error.message })
     }
 }
 
@@ -191,17 +176,17 @@ exports.resetPassword = async (req, res) => {
         const check = await User.findOne({ _id: req.logInid }).populate('password')
         const isMatch = await bcrypt.compare(currpassword, check.password)
         if (!isMatch) {
-            return res.status(400).json({ message: 'Current password is invalid!!' });
+            return res.json({ data: [], status: false, message: 'Current password is invalid!!' });
         }
         const hashPass = await bcrypt.hash(password, 10)
         const passswordStatus = await User.findByIdAndUpdate(req.logInid, {
             $set: { password: hashPass }
         })
         if (!passswordStatus) {
-            return res.status(400).json({ message: 'Somthing went wrong!!' })
+            return res.json({ data: [], status: false, message: 'Somthing went wrong!!' })
         }
-        return res.status(200).json({ message: 'Password changed!!' })
+        return res.json({ data: [], status: true, message: 'Password changed!!' })
     } catch (error) {
-        return res.status(400).json({ message: error.message })
+        return res.json({ data: [], status: false, message: error.message })
     }
 }

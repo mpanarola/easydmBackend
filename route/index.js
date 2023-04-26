@@ -1,7 +1,10 @@
 const express = require('express')
 const router = express.Router()
-const auth = require('./auth.route')
 
-router.use(auth)
+router.use(
+    require('./auth.route'),
+    require('./website.route'),
+    require('./contentScheduler.route')
+)
 
 module.exports = router

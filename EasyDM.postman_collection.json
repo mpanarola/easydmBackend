@@ -1,0 +1,448 @@
+{
+	"info": {
+		"_postman_id": "673d95bd-e143-4d03-9de1-abc3e06490da",
+		"name": "EasyDM",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"pm.environment.set(\"TOKEN\", response.data[0].token);",
+									"console.log(\"Token ==>\", response.token)"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\" : \"admin@narola.email\",\n    \"password\" : \"Password@12\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/login",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Me",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{TOKEN}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{URL}}/me",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Registration",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "John Smith",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "fbp1@narola.email",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "john_smith",
+									"type": "text"
+								},
+								{
+									"key": "avatar",
+									"type": "file",
+									"src": "/Users/c100-89/Desktop/Foram/9faaa1fedc94c355a4256ba6207c7714.png"
+								},
+								{
+									"key": "mobileNo",
+									"value": "7201063365",
+									"type": "text"
+								},
+								{
+									"key": "userType",
+									"value": "Content Writer",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "ABC@1234",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{URL}}/registration",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"registration"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"currpassword\": \"4b96gwfs\",\n    \"password\": \"Password@12\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/resetpassword",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"resetpassword"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password Email",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\" : \"fbp@narola.email\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/forgotLink",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"forgotLink"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"password\": \"Password@12\",\n    \"resetPasswordToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImpvaG5fc21pdGgiLCJfaWQiOiI2NDQ3YmI1MmViYWRjZjMyZmNkMTBhMzciLCJpYXQiOjE2ODI0MjMxODgsImV4cCI6MTY4MjQyMzI0OH0.4K67tOOTirjZ_wwZW2JuIVoQEDv17nRmHQGnSuCw-8w\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/forgotpassword",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"forgotpassword"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Website",
+			"item": [
+				{
+					"name": "Create Website",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"webpage\": \"ABC\",\n    \"webpageUrl\": \"https://react.dev/learn/state-a-components-memory\",\n    \"publishedOn\": \"2022/4/10\",\n    \"assignedTo\": [\"64489bf2b5cd3073ca8154e2\"],\n    \"effectiveFrom\": \"2023/2/7\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/create_website",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"create_website"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "View activity of website",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/activity_website/6448eda7add6d56cf4bb49b9",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"activity_website",
+								"6448eda7add6d56cf4bb49b9"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get website by Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/get_website_ById/6448eda7add6d56cf4bb49b9",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"get_website_ById",
+								"6448eda7add6d56cf4bb49b9"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update website",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"publishedOn\": \"2022/5/10\",\n    \"effectiveFrom\": \"2023/3/7\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/update_website/6448c15c10aae02a662a1739",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"update_website",
+								"6448c15c10aae02a662a1739"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Website",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/delete_website/6448eda7add6d56cf4bb49b9",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"delete_website",
+								"6448eda7add6d56cf4bb49b9"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all websites",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"options\": {\n\t\t\"select\": {},\n\t\t\"limit\": 10,\n\t\t\"page\": 1,\n\t\t\"sort\": {\n\t\t\t\"createdAt\": [1/-1]\n\t\t},\n\t\t\"populate\": [\n\t\t\t{\n\t\t\t\t\"path\": \"addedBy\",\n\t\t\t\t\"select\": [\"name\"]\n\t\t\t},\n            {\n\t\t\t\t\"path\": \"assignedTo\",\n\t\t\t\t\"select\": [\"name\"]\n\t\t\t}\n\t\t],\n\t\t\"pagination\": true\n\t},\n\t\"query\": {\n        [filters]\n\t},\n\t\"search\": {\n        \"keys\": [\"webpage\"],\n\t\t\"value\": \"abc\"\n\n\t}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/get_websites",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"get_websites"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Content Scheduler",
+			"item": [
+				{
+					"name": "Create Content Scheduler",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/create_scheduler",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"create_scheduler"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Content Scheduler by Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/create_scheduler",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"create_scheduler"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{TOKEN}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

@@ -20,10 +20,10 @@ const WebsiteSchema = new mongoose.Schema({
         type: Date,
         require: true
     },
-    assignedTo: {
+    assignedTo: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
-    },
+    }],
     effectiveFrom: {
         type: Date,
         require: true

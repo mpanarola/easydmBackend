@@ -12,18 +12,14 @@ const ActivityWebsiteSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
+    fields: [String],
     activityName: {
         type: String,
-        require: true
+        enum: ['Created', 'Updated'],
+        default: 'Created'
     },
-    details: {
-        type: String,
-        require: true
-    },
-    time: {
-        type: Date,
-        require: true
-    },
+    details: String,
+    time: Date,
 }, {
     timestamps: true
 })
