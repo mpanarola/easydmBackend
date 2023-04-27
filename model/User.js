@@ -51,6 +51,12 @@ UserSchema.pre('save', async function (next) {
     }
     next();
 })
+
+UserSchema.pre('findOneAndUpdate', async function (next) {
+    this.getUpdate().password = await bcrypt.hash(this.getUpdate().password, 10)
+    next();
+})
+
 mongoosePaginate.paginate.options = PAGINATE_OPTIONS;
 UserSchema.plugin(mongoosePaginate);
 

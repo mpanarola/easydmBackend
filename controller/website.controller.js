@@ -18,7 +18,7 @@ exports.createWebsite = async (req, res) => {
             time: checkData.createdAt
         }
         await Activity.create(activityData)
-        return res.json({ data: [], status: true, message: 'Website created successfully!!' })
+        return res.json({ data: [checkData], status: true, message: 'Website created successfully!!' })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -36,7 +36,7 @@ exports.viewActivity = async (req, res) => {
         if (!activityData) {
             return res.json({ data: [], status: false, message: 'Something went wrong! Not able fetch data for website!!' })
         }
-        return res.json({ data: [], status: true, data: activityData })
+        return res.json({ data: [activityData], status: true, message: "" })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -50,7 +50,7 @@ exports.getWebsiteById = async (req, res) => {
         if (!checkWebsite) {
             return res.json({ data: [], status: false, message: 'This website is not available!!' })
         }
-        return res.json({ data: checkWebsite, status: true, message: "" })
+        return res.json({ data: [checkWebsite], status: true, message: "" })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -87,7 +87,7 @@ exports.updateWebsite = async (req, res) => {
     }
 }
 
-exports.deleteWebpage = async (req, res) => {
+exports.deleteWebsite = async (req, res) => {
     try {
         const checkWebsite = await Website.findById(req.params.id)
         if (!checkWebsite) {
@@ -115,8 +115,8 @@ exports.getWebsites = async (req, res, next) => {
         option.query['isDeleted'] = false
 
         const websites = await paginate(option, Website);
-        return res.json({ data: websites, status: false, message: "" });
+        return res.json({ data: [websites], status: false, message: "" });
     } catch (error) {
-        return res.json({data: [], status: false, message: error.message })
+        return res.json({ data: [], status: false, message: error.message })
     }
 }

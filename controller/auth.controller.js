@@ -35,7 +35,7 @@ exports.registration = async (req, res) => {
         //     return res.status(404).json({ message: 'Somthing went wrong!!Can not sent mail to your emailid!!' })
         // }
         // return res.json({data: [], status: true, message: `User's registered successfully!! Mail sent to your emailid!!!` })
-        return res.json({ data: [], status: true, message: `User's registered successfully!!` })
+        return res.json({ data: [user1], status: true, message: `User's registered successfully!!` })
 
     }
     catch (error) {
@@ -70,7 +70,10 @@ exports.login = async (req, res) => {
             username: user.username,
             _id: user._id.toString(),
         }, process.env.SECRET_KEY, { expiresIn: '5h' });
-        return res.json({ data: [{ token: token }], status: true, message: 'Login successfully!!' })
+        let userData = user._doc
+        userData['token'] = token
+        userData['password'] = ""
+        return res.json({ data: [userData], status: true, message: 'Login successfully!!' })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -84,16 +87,7 @@ exports.me = async (req, res) => {
         if (!user) {
             return res.json({ data: [], status: false, message: 'User does not exits!!' });
         }
-        return res.json({ data: user, status: true, message: "" });
-    } catch (error) {
-        return res.json({ data: [], status: false, message: error.message })
-    }
-}
-
-exports.listOfUsers = async (req, res) => {
-    try {
-        const users = await User.find({}).select('-password -__v -createdAt -updatedAt -wrongAttempt')
-        return res.json({ data: [], status: true, data: users });
+        return res.json({ data: [user], status: true, message: "" });
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }

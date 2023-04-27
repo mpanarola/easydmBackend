@@ -16,8 +16,7 @@
 							"script": {
 								"exec": [
 									"const response = pm.response.json();",
-									"pm.environment.set(\"TOKEN\", response.data[0].token);",
-									"console.log(\"Token ==>\", response.token)"
+									"pm.environment.set(\"TOKEN\", response.data[0].token);"
 								],
 								"type": "text/javascript"
 							}
@@ -86,7 +85,7 @@
 								},
 								{
 									"key": "email",
-									"value": "fbp1@narola.email",
+									"value": "fbp2@narola.email",
 									"type": "text"
 								},
 								{
@@ -376,7 +375,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \n}",
+							"raw": "{\n    \"contentType\":\"Article\",\n    \"webpage\": \"644a394d9ea7e632bf7040c9\",\n    \"refereceLinks\": [\"https://react.dev/learn/state-a-components-memory\"],\n    \"topicTitle\": \"XYZ\",\n    \"docLink\": \"https://react.dev/learn/state-a-components-memory\",\n    \"expectedWords\": \"ascfdx\",\n    \"actualWords\": \"sxdvf\",\n    \"assignedOn\":\"2023/2/7\",\n    \"assignedBy\": \"6447bb52ebadcf32fcd10a37\",\n    \"submitedOn\": \"2023/4/7\",\n    \"writtenBy\": \"64489bf2b5cd3073ca8154e2\",\n    \"contentStatus\": \"In-progress\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -401,12 +400,196 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{URL}}/create_scheduler",
+							"raw": "{{URL}}/get_scheduler_ById/644a39eb9ea7e632bf7040ce",
 							"host": [
 								"{{URL}}"
 							],
 							"path": [
-								"create_scheduler"
+								"get_scheduler_ById",
+								"644a39eb9ea7e632bf7040ce"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "View Activity",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/activity_scheduler/644a39eb9ea7e632bf7040ce",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"activity_scheduler",
+								"644a39eb9ea7e632bf7040ce"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Content Scheduler",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"contentType\":\"Article\",\n    \"webpage\": \"644a394d9ea7e632bf7040c9\",\n    \"refereceLinks\": [\"https://react.dev/learn/state-a-components-memory\"],\n    \"topicTitle\": \"XYZ\",\n    \"docLink\": \"https://react.dev/learn/state-a-components-memory\",\n    \"expectedWords\": \"ascfdx\",\n    \"actualWords\": \"sxdvf\",\n    \"assignedOn\":\"2023/2/7\",\n    \"assignedBy\": \"6447bb52ebadcf32fcd10a37\",\n    \"submitedOn\": \"2023/4/7\",\n    \"writtenBy\": \"64489bf2b5cd3073ca8154e2\",\n    \"contentStatus\": \"In-progress\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/update_scheduler/644a39eb9ea7e632bf7040ce",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"update_scheduler",
+								"644a39eb9ea7e632bf7040ce"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Content Scheduler",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/delete_scheduler/644a39eb9ea7e632bf7040ce",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"delete_scheduler",
+								"644a39eb9ea7e632bf7040ce"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Content Scheduler",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/scheduler",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"scheduler"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Members",
+			"item": [
+				{
+					"name": "Get all members",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/members",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"members"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Member",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "John Smith",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "fbp2@narola.email",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "john_smith",
+									"type": "text"
+								},
+								{
+									"key": "avatar",
+									"type": "file",
+									"src": "/Users/c100-89/Desktop/Foram/9faaa1fedc94c355a4256ba6207c7714.png"
+								},
+								{
+									"key": "mobileNo",
+									"value": "7201063365",
+									"type": "text"
+								},
+								{
+									"key": "userType",
+									"value": "Content Writer",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "ABC@1234",
+									"type": "text"
+								}
+							],
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/update_member/6447bb52ebadcf32fcd10a37",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"update_member",
+								"6447bb52ebadcf32fcd10a37"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete members",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/delete_member/6447bb52ebadcf32fcd10a37",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"delete_member",
+								"6447bb52ebadcf32fcd10a37"
 							]
 						}
 					},
