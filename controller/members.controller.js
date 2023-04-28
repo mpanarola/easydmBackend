@@ -1,5 +1,6 @@
 const User = require('../model/User')
 const paginate = require('../helper/paginate')
+const bcrypt = require('bcryptjs');
 
 exports.getAllMembers = async (req, res) => {
     try {
@@ -10,7 +11,7 @@ exports.getAllMembers = async (req, res) => {
         option.query['userRole'] = { $ne: 1 }
 
         const member = await paginate(option, User);
-        return res.json({ data: member, status: false, message: "" });
+        return res.json({ data: [member], status: true, message: "All member's data!!" });
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -22,22 +23,25 @@ exports.updateMember = async (req, res) => {
         if (!checkUser) {
             return res.json({ data: [], status: false, message: 'This member is not available!!' })
         }
+        console.log('Body Data ==>', req.body)
         const userData = { ...req.body }
-        let avatar = checkUser.avatar;
-        if (req.file === undefined) {
+        let avatar = "";
+        if (req.file !== undefined) {
             avatar = req.file.filename;
+            userData.avatar = avatar
         }
-        userData.avatar = avatar
-        if(userData.password){
-            if(req.type !==1){
-                return res.json({ data: [], status: false, message: 'Only Admin can change the password!!' }) 
+        if (req.body.password) {
+            if (req.type !== 1) {
+                return res.json({ data: [], status: false, message: 'Only Admin can change the password!!' })
             }
+            const hashPass = await bcrypt.hash(req.body.password, 10)
+            userData.password = hashPass
         }
         const checkUpdate = await User.findByIdAndUpdate(req.params.id, userData)
         if (!checkUpdate) {
             return res.json({ data: [], status: false, message: 'Not able to update member!!' })
         }
-        return res.json({ data: [], status: true, message: 'Member updated!!' })
+        return res.json({ data: [checkUpdate], status: true, message: 'Member updated!!' })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -68,7 +72,7 @@ exports.getMemberById = async (req, res) => {
         if (!checkMember) {
             return res.json({ data: [], status: false, message: "This member is not exist!!" })
         }
-        return res.json({ data: [checkMember], status: true, message: "" })
+        return res.json({ data: [checkMember], status: true, message: "All the members" })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }

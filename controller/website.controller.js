@@ -31,8 +31,9 @@ exports.viewActivity = async (req, res) => {
             return res.json({ data: [], status: false, message: 'This website is not exist!!' })
         }
         const activityData = await Activity.find({ webpageId: req.params.id })
-            .populate('addedBy', 'name')
+            .populate('addedBy', 'name avatar')
             .populate('webpageId', 'webpage')
+            .sort({ createdAt: -1 })
         if (!activityData) {
             return res.json({ data: [], status: false, message: 'Something went wrong! Not able fetch data for website!!' })
         }
@@ -77,11 +78,11 @@ exports.updateWebsite = async (req, res) => {
             addedBy: req.logInid,
             activityName: 'Updated',
             fields: updatedFields,
-            details: updatedFields + ' Fields Updated.',
+            details: 'Updated ' + updatedFields + ' Fields.',
             time: checkUpdate.updatedAt
         }
         await Activity.create(activityData)
-        return res.json({ data: [], status: true, message: 'Website updated!!' })
+        return res.json({ data: [checkUpdate], status: true, message: 'Website updated!!' })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -115,7 +116,7 @@ exports.getWebsites = async (req, res, next) => {
         option.query['isDeleted'] = false
 
         const websites = await paginate(option, Website);
-        return res.json({ data: [websites], status: false, message: "" });
+        return res.json({ data: [websites], status: false, message: "All the websites" });
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }

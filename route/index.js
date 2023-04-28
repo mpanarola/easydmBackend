@@ -6,6 +6,9 @@ router.use(
     require('./website.route'),
     require('./contentScheduler.route'),
     require('./members.route'),
+    require('./backLink.route'),
+    require('./pageView.route'),
+    require('./dayBook.route')
 )
 
 module.exports = router

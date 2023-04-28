@@ -16,7 +16,7 @@ const BackLinksSchema = new mongoose.Schema({
         type: Date,
         require: true
     },
-    numberOfBacllinks: {
+    numberOfBacklinks: {
         type: Number,
         require: true
     }

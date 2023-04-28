@@ -47,15 +47,20 @@ const UserSchema = new mongoose.Schema({
 
 UserSchema.pre('save', async function (next) {
     if (this.isModified('password')) {
+        console.log('Password ==>', this.password)
         this.password = await bcrypt.hash(this.password, 10)
     }
     next();
 })
 
-UserSchema.pre('findOneAndUpdate', async function (next) {
-    this.getUpdate().password = await bcrypt.hash(this.getUpdate().password, 10)
-    next();
-})
+// UserSchema.pre('findByIdAndUpdate', async function (next) {
+//     console.log('Password ==>', this.password)
+//     if (this.isModified('password')) {
+//         const password = await bcrypt.hash(this.password, 10)
+//         this.set({ password: password })
+//     }
+//     next();
+// })
 
 mongoosePaginate.paginate.options = PAGINATE_OPTIONS;
 UserSchema.plugin(mongoosePaginate);

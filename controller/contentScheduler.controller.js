@@ -25,6 +25,7 @@ exports.createContentScheduler = async (req, res) => {
 exports.getContentSchedulersById = async (req, res) => {
     try {
         const checkScheduler = await ContentScheduler.findById(req.params.id)
+            .populate('webpage', 'webpage category')
         if (!checkScheduler) {
             return res.json({ data: [], status: false, message: "This Content Scheduler is not exist!!" })
         }
@@ -41,7 +42,8 @@ exports.viewActivity = async (req, res) => {
             return res.json({ data: [], status: false, message: 'This Content Scheduler is not exist!!' })
         }
         const activityData = await Activity.find({ contentSchedulerId: req.params.id })
-            .populate('addedBy', 'name')
+            .populate('addedBy', 'name avatar')
+            .sort({ createdAt: -1 })
         if (!activityData) {
             return res.json({ data: [], status: false, message: 'Something went wrong! Not able fetch data for website!!' })
         }
@@ -67,11 +69,11 @@ exports.updateContentScheduler = async (req, res) => {
             updatedFields.push(fields)
         });
         const activityData = {
-            webpageId: checkScheduler._id,
+            contentSchedulerId: checkScheduler._id,
             addedBy: req.logInid,
             activityName: 'Updated',
             fields: updatedFields,
-            details: updatedFields + ' Fields Updated.',
+            details: 'Updated ' + updatedFields + ' Fields.',
             time: checkScheduler.updatedAt
         }
         await Activity.create(activityData)

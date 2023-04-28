@@ -35,6 +35,7 @@ exports.registration = async (req, res) => {
         //     return res.status(404).json({ message: 'Somthing went wrong!!Can not sent mail to your emailid!!' })
         // }
         // return res.json({data: [], status: true, message: `User's registered successfully!! Mail sent to your emailid!!!` })
+        user1.password = ""
         return res.json({ data: [user1], status: true, message: `User's registered successfully!!` })
 
     }
@@ -69,7 +70,7 @@ exports.login = async (req, res) => {
         const token = jwt.sign({
             username: user.username,
             _id: user._id.toString(),
-        }, process.env.SECRET_KEY, { expiresIn: '5h' });
+        }, process.env.SECRET_KEY, { expiresIn: '1d' });
         let userData = user._doc
         userData['token'] = token
         userData['password'] = ""

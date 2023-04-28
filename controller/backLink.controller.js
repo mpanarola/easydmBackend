@@ -24,8 +24,29 @@ exports.createBackLinks = async (req, res) => {
 
 exports.updateBackLinks = async (req, res) => {
     try {
-        
-
+        const checkLink = await BackLinks.findById(req.params.id)
+        if (!checkLink) {
+            return res.json({ data: [], status: false, message: "This back link is not exist!!" })
+        }
+        const linkData = { ...req.body }
+        const updateLink = await BackLinks.findByIdAndUpdate(req.params.id, linkData)
+        if (!updateLink) {
+            return res.json({ data: [], status: false, message: 'Not able to update Content Scheduler!!' })
+        }
+        const updatedFields = []
+        Object.keys(req.body).forEach(function (fields) {
+            updatedFields.push(fields)
+        });
+        const activityData = {
+            backLinksId: checkLink._id,
+            addedBy: req.logInid,
+            activityName: 'Updated',
+            fields: updatedFields,
+            details: 'Updated ' + updatedFields + ' Fields.',
+            time: checkLink.updatedAt
+        }
+        await Activity.create(activityData)
+        return res.json({ data: [], status: true, message: 'Back Link updated!!' })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -33,7 +54,18 @@ exports.updateBackLinks = async (req, res) => {
 
 exports.deleteBackLinks = async (req, res) => {
     try {
-
+        const checkLink = await BackLinks.findById(req.params.id)
+        if (!checkLink) {
+            return res.json({ data: [], status: false, message: "This back link is not exist!!" })
+        }
+        if (req.type === 2) {
+            return res.json({ data: [], status: false, message: 'Only Admin can delete the back link!!' })
+        }
+        const deleteLink = await BackLinks.findByIdAndRemove(req.params.id)
+        if (!deleteLink) {
+            return res.json({ data: [], status: false, message: 'Not able to update back link!!' })
+        }
+        return res.json({ data: [], status: true, message: 'Back link deleted!!' })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -46,8 +78,8 @@ exports.getBackLinks = async (req, res) => {
             option['query'] = {};
         }
         option.query['isDeleted'] = false
-        const baclLinks = await paginate(option, BackLinks);
-        return res.json({ data: [baclLinks], status: false, message: "" });
+        const backLinks = await paginate(option, BackLinks);
+        return res.json({ data: [backLinks], status: false, message: "" });
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -55,7 +87,12 @@ exports.getBackLinks = async (req, res) => {
 
 exports.getBackLinksById = async (req, res) => {
     try {
-
+        const checkLink = await BackLinks.findById(req.params.id)
+            .populate('webpage', 'webpage category')
+        if (!checkLink) {
+            return res.json({ data: [], status: false, message: "This back link is not exist!!" })
+        }
+        return res.json({ data: [checkLink], status: true, message: '' })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -63,7 +100,37 @@ exports.getBackLinksById = async (req, res) => {
 
 exports.viewActivity = async (req, res) => {
     try {
+        const checkLink = await BackLinks.findById(req.params.id)
+        if (!checkLink) {
+            return res.json({ data: [], status: false, message: "This back link is not exist!!" })
+        }
+        const activityData = await Activity.find({ backLinksId: req.params.id })
+            .populate('addedBy', 'name avatar')
+            .sort({ createdAt: -1 })
+        if (!activityData) {
+            return res.json({ data: [], status: false, message: 'Not able to fetch data for this back link!!' })
+        }
+        return res.json({ data: [activityData], status: true, message: '' })
+    } catch (error) {
+        return res.json({ data: [], status: false, message: error.message })
+    }
+}
 
+exports.history = async (req, res) => {
+    try {
+        const date1 = Date.now() + -365 * 24 * 3600000
+        const endDate = new Date(date1).toISOString()
+        const betweenDate = { $lte: new Date, $gte: endDate }
+        const LastYearData = await BackLinks.find({ $and: [{ isDeleted: false }, { monthYear: betweenDate }] })
+        const data = [], months = []
+        LastYearData.forEach(element => {
+            data.push(element.numberOfBacklinks)
+            let month = element.monthYear.toLocaleString('default', { month: 'short' });
+            let year = new Date(element.monthYear).getFullYear();
+            months.push(`${month}-${year}`)
+        });
+
+        return res.json({ data: { data: data, months: months }, status: true, message: "Last 1 Year's Data." })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }

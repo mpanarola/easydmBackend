@@ -12,6 +12,10 @@ const DayBookSchema = new mongoose.Schema({
         ref: 'Website',
         require: true
     },
+    creationDate: {
+        type: Date,
+        default: new Date()
+    },
     hours: {
         type: Number,
         require: true
