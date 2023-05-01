@@ -26,6 +26,11 @@ const ActivityContentSchedulerSchema = new mongoose.Schema({
         type: Date,
         require: true
     },
+    readability: Number,
+    seo: Number,
+    toneOfVoice: Number,
+    originality: Number,
+    contentScore: Number
 }, {
     timestamps: true
 })

@@ -4,13 +4,25 @@ const User = require('../model/User')
 var checkUser = async (req, res, next) => {
     try {
         const { authorization } = req.headers;
-        if (!authorization && !authorization.startsWith('Bearer')) {
-            return res.json({ data: [], status: false, message: 'Token expired!!' })
-        } else {
+        if (!authorization) {
+            return res.json({ data: [], status: false, message: 'Token not exist!!' })
+        }
+        else {
             let token = authorization.split(' ')[1]
-            const _id = jwt.verify(token, process.env.SECRET_KEY)
-            const user = await User.findById(_id)
-            req.logInid = _id;
+            let tokenData
+            jwt.verify(token, process.env.SECRET_KEY, (err, verified) => {
+                if (err) {
+                    tokenData = undefined
+                }
+                else {
+                    tokenData = verified
+                }
+            })
+            if (tokenData === undefined) {
+                return res.json({ data: [], status: false, message: 'Token expired!!' })
+            }
+            const user = await User.findById(tokenData)
+            req.logInid = tokenData;
             req.type = user.userRole
             next();
         }

@@ -70,7 +70,7 @@ exports.login = async (req, res) => {
         const token = jwt.sign({
             username: user.username,
             _id: user._id.toString(),
-        }, process.env.SECRET_KEY, { expiresIn: '1d' });
+        }, process.env.SECRET_KEY, { expiresIn: '30d' });
         let userData = user._doc
         userData['token'] = token
         userData['password'] = ""
@@ -102,31 +102,30 @@ exports.forgotPassLink = async (req, res) => {
             return res.json({ data: [], status: false, message: 'Email does no exist!!' })
         }
         else {
-            const cnt = user.wrongAttempt;
-            if (cnt > 10) {
-                return res.status(404).json({ message: 'Max attempt for resending mail is over!!' })
-            }
-            const token = jwt.sign({
-                username: user.username,
-                _id: user._id.toString()
-            }, process.env.SECRET_KEY, { expiresIn: '1m' });
+            // const cnt = user.wrongAttempt;
+            // if (cnt > 10) {
+            //     return res.status(404).json({ message: 'Max attempt for resending mail is over!!' })
+            // }
+            // const token = jwt.sign({
+            //     username: user.username,
+            //     _id: user._id.toString()
+            // }, process.env.SECRET_KEY, { expiresIn: '1m' });
+
+            const password = Math.random().toString(36).slice(-8);
+            const hashPass = await bcrypt.hash(password, 10)
             await User.findOneAndUpdate({ email: email },
                 {
-                    $set:
-                    {
-                        wrongAttempt: parseInt(user.wrongAttempt) + 1,
-                        resetPasswordToken: token,
-                        expireToken: new Date().getTime() + 300 * 1000
-                    }
-                })
+                    password: hashPass
+                }
+            )
             transport.sendMail({
                 to: email,
                 from: 'fparmar986@gmail.com',
-                subject: 'Reset Password!!',
-                html: `<h1>Reset your password!!</h1><br />
-                        <p>Please click on this link to reset your password.<br /><a href="${process.env.EMAIL}/${token}">Reset Password</a></p><br />
-                        <p>This link will expire in 5 minutes...</p><br />
-                        <p>Max Attempt for resend otp is 3!! This your ${cnt + 1} attempt.</p>`
+                subject: 'Change Password!!',
+                html: `<h1>Change your password!!</h1><br />
+                        <h2>Hello ${user.name}!!.</h2><br />
+                        <p>Your new password is :  ${password}</p>
+                        `
             })
             if (!transport) {
                 return res.status(404).json({ message: 'Somthing went wrong!!Can not sent mail to your emailid!!' })
@@ -138,32 +137,32 @@ exports.forgotPassLink = async (req, res) => {
     }
 }
 
-exports.forgotPassword = async (req, res) => {
-    try {
-        const { password, resetPasswordToken } = req.body
-        const user = await User.findOne({ resetPasswordToken })
-        let curTime = new Date().getTime();
-        let extime = (user.expireToken).getTime();
-        let diff = extime - curTime;
-        if (diff < 0) {
-            return res.json({ data: [], status: false, message: 'Link exprired!!, Please send again!!' })
-        }
-        user.password = password;
-        const updatePassword = await user.save()
-        if (!updatePassword) {
-            return res.json({ data: [], status: false, message: 'Password is not updated!!' })
-        }
-        await User.findOneAndUpdate({ email: user.email },
-            {
-                wrongAttempt: 0,
-                resetPasswordToken: "",
-                expireToken: ""
-            })
-        return res.json({ data: [], status: true, message: 'Password Updated!!' })
-    } catch (error) {
-        return res.json({ data: [], status: false, message: error.message })
-    }
-}
+// exports.forgotPassword = async (req, res) => {
+//     try {
+//         const { password, resetPasswordToken } = req.body
+//         const user = await User.findOne({ resetPasswordToken })
+//         let curTime = new Date().getTime();
+//         let extime = (user.expireToken).getTime();
+//         let diff = extime - curTime;
+//         if (diff < 0) {
+//             return res.json({ data: [], status: false, message: 'Link exprired!!, Please send again!!' })
+//         }
+//         user.password = password;
+//         const updatePassword = await user.save()
+//         if (!updatePassword) {
+//             return res.json({ data: [], status: false, message: 'Password is not updated!!' })
+//         }
+//         await User.findOneAndUpdate({ email: user.email },
+//             {
+//                 wrongAttempt: 0,
+//                 resetPasswordToken: "",
+//                 expireToken: ""
+//             })
+//         return res.json({ data: [], status: true, message: 'Password Updated!!' })
+//     } catch (error) {
+//         return res.json({ data: [], status: false, message: error.message })
+//     }
+// }
 
 exports.resetPassword = async (req, res) => {
     try {

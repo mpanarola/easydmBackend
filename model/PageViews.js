@@ -19,7 +19,12 @@ const PageViewsSchema = new mongoose.Schema({
     numberOfPageviews: {
         type: Number,
         require: true
-    }
+    },
+    readability: Number,
+    seo: Number,
+    toneOfVoice: Number,
+    originality: Number,
+    contentScore: Number
 }, {
     timestamps: true
 })

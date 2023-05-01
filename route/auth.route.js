@@ -8,7 +8,7 @@ router.post('/registration', imageMiddleware.single('avatar'), auth.registration
 router.post('/login', auth.login)
 router.get('/me', authMiddleware, auth.me)
 router.post('/forgotLink', auth.forgotPassLink)
-router.post('/forgotpassword', auth.forgotPassword)
+// router.post('/forgotpassword', auth.forgotPassword)
 router.post('/resetpassword', authMiddleware, auth.resetPassword)
 
 module.exports = router;

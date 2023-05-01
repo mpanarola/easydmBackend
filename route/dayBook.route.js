@@ -9,5 +9,6 @@ router.get('/get_daybook_ById/:id', authMiddleware, dayBook.getDayBookById)
 router.put('/update_daybook/:id', authMiddleware, dayBook.updateDayBook)
 router.delete('/delete_daybook/:id', authMiddleware, dayBook.deleteDayBook)
 router.post('/daybooks', authMiddleware, dayBook.getDayBook)
+router.post('/usersdaybooks/:id', authMiddleware, dayBook.getDayBookOfUser)
 
 module.exports = router;
