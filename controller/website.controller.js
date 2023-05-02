@@ -70,7 +70,7 @@ exports.updateWebsite = async (req, res) => {
         }
         const updatedFields = []
         Object.keys(req.body).forEach(function (fields) {
-            updatedFields.push(fields)
+            updatedFields.push(' ' + fields)
         });
         console.log('Data ==>', updatedFields)
         const activityData = {

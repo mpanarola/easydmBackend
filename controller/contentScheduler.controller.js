@@ -66,7 +66,7 @@ exports.updateContentScheduler = async (req, res) => {
         }
         const updatedFields = []
         Object.keys(req.body).forEach(function (fields) {
-            updatedFields.push(fields)
+            updatedFields.push(' ' + fields)
         });
         const activityData = {
             contentSchedulerId: checkScheduler._id,

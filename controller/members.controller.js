@@ -41,7 +41,8 @@ exports.updateMember = async (req, res) => {
         if (!checkUpdate) {
             return res.json({ data: [], status: false, message: 'Not able to update member!!' })
         }
-        return res.json({ data: [checkUpdate], status: true, message: 'Member updated!!' })
+        const updatedData = await User.findById(checkUpdate._id)
+        return res.json({ data: [updatedData], status: true, message: 'Member updated!!' })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }

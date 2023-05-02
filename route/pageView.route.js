@@ -9,6 +9,6 @@ router.get('/get_pageview_ById/:id', authMiddleware, pageView.getPageViewById)
 router.put('/update_pageview/:id', authMiddleware, pageView.updatePageView)
 router.delete('/delete_pageview/:id', authMiddleware, pageView.deletePageView)
 router.post('/pageviews', authMiddleware, pageView.getPageView)
-router.get('/pageViewHistory', authMiddleware, pageView.history)
+router.get('/pageViewHistory/:id', authMiddleware, pageView.history)
 
 module.exports = router;

@@ -41,6 +41,11 @@ const ContentSchedulerSchema = new mongoose.Schema({
         enum: ["In-progress", "Input-missing", "Complete", "In-review"],
         // default: "In-progress"
     },
+    readability: Number,
+    seo: Number,
+    toneOfVoice: Number,
+    originality: Number,
+    contentScore: Number
 }, {
     timestamps: true
 })

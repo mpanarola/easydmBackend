@@ -2,7 +2,7 @@ async function paginate(params, model) {
     let search = null;
     let query = {};
     let $or = [];
-    let options = {  pagination: true };
+    let options = { pagination: true };
     if (params.hasOwnProperty('search')) {
         search = params.search;
         delete params.search;
@@ -12,6 +12,7 @@ async function paginate(params, model) {
     }
     if (params.hasOwnProperty('options')) {
         options = params.options;
+        options.sort = { createdAt: -1 }
     }
     if (search && search.hasOwnProperty('keys') && Array.isArray(search.keys) && search.keys.length) {
         for (let keyIndex = 0; keyIndex < search.keys.length; keyIndex++) {
@@ -23,7 +24,7 @@ async function paginate(params, model) {
     try {
         const data = await model.paginate(query, options);
         return data;
-    } catch(err) {
+    } catch (err) {
         console.log(err);
     }
 }

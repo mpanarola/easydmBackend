@@ -35,7 +35,7 @@ exports.updatePageView = async (req, res) => {
         }
         const updatedFields = []
         Object.keys(req.body).forEach(function (fields) {
-            updatedFields.push(fields)
+            updatedFields.push(' ' + fields)
         });
         const activityData = {
             pageViewsId: checkView._id,
@@ -148,7 +148,7 @@ exports.history = async (req, res) => {
             const year = new Date(date).getFullYear();
             const betweenDate = { $lte: nextDateFormat, $gte: dateFormat }
             console.log('Dates ==>', betweenDate)
-            const monthWise = await PageView.find({ $and: [{ isDeleted: false }, { monthYear: betweenDate }] })
+            const monthWise = await PageView.find({ $and: [{ isDeleted: false }, { monthYear: betweenDate }, { webpage: req.params.id }] })
             console.log('Data ==>', monthWise)
             let count = 0
             monthWise.forEach(element => {

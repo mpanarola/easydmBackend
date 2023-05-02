@@ -38,7 +38,7 @@ exports.updateDayBook = async (req, res) => {
         }
         const updatedFields = []
         Object.keys(req.body).forEach(function (fields) {
-            updatedFields.push(fields)
+            updatedFields.push(' ' + fields)
         });
         const activityData = {
             dayBookId: checkBook._id,
@@ -77,6 +77,15 @@ exports.deleteDayBook = async (req, res) => {
 exports.getDayBook = async (req, res) => {
     try {
         let query = [
+            // {
+            //     $match: {
+            //         $expr: {
+            //             $and: [
+            //                 { $eq: ["$webpage", req.params.id] },
+            //             ]
+            //         }
+            //     }
+            // },
             {
                 $lookup: {
                     from: 'User',

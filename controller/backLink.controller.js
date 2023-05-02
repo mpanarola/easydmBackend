@@ -35,7 +35,7 @@ exports.updateBackLinks = async (req, res) => {
         }
         const updatedFields = []
         Object.keys(req.body).forEach(function (fields) {
-            updatedFields.push(fields)
+            updatedFields.push(' ' + fields)
         });
         const activityData = {
             backLinksId: checkLink._id,
@@ -77,6 +77,9 @@ exports.getBackLinks = async (req, res) => {
         if (!option.hasOwnProperty('query')) {
             option['query'] = {};
         }
+        // if (!option.options.hasOwnProperty('sort')) {
+        //     option['sort'] = {};
+        // }
         option.query['isDeleted'] = false
         const backLinks = await paginate(option, BackLinks);
         return res.json({ data: [backLinks], status: false, message: "" });
@@ -131,7 +134,7 @@ exports.history = async (req, res) => {
             const year = new Date(date).getFullYear();
             const betweenDate = { $lte: nextDateFormat, $gte: dateFormat }
             console.log('Dates ==>', betweenDate)
-            const monthWise = await BackLinks.find({ $and: [{ isDeleted: false }, { monthYear: betweenDate }] })
+            const monthWise = await BackLinks.find({ $and: [{ isDeleted: false }, { monthYear: betweenDate }, { webpage: req.params.id }] })
             console.log('Data ==>', monthWise)
             let count = 0
             monthWise.forEach(element => {

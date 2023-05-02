@@ -5,7 +5,7 @@ const path = require('path')
 const cors = require('cors')
 require('dotenv').config()
 require('./util/connection')
-require('./seed').userSeed()
+// require('./seed').userSeed()
 
 const route = require('./route/index')
 app.use(cors())

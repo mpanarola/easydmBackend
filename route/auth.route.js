@@ -13,3 +13,4 @@ router.post('/resetpassword', authMiddleware, auth.resetPassword)
 
 module.exports = router;
 
+

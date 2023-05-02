@@ -9,6 +9,6 @@ router.get('/get_backlink_ById/:id', authMiddleware, backLink.getBackLinksById)
 router.put('/update_backlink/:id', authMiddleware, backLink.updateBackLinks)
 router.delete('/delete_backlink/:id', authMiddleware, backLink.deleteBackLinks)
 router.post('/backlinks', authMiddleware, backLink.getBackLinks)
-router.get('/backLinkHistory', authMiddleware, backLink.history)
+router.get('/backLinkHistory/:id', authMiddleware, backLink.history)
 
 module.exports = router;
