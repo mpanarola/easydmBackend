@@ -72,7 +72,6 @@ exports.updateWebsite = async (req, res) => {
         Object.keys(req.body).forEach(function (fields) {
             updatedFields.push(' ' + fields)
         });
-        console.log('Data ==>', updatedFields)
         const activityData = {
             webpageId: checkWebsite._id,
             addedBy: req.logInid,

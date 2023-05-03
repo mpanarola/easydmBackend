@@ -1,10 +1,15 @@
 const BackLinks = require('../model/BackLinks')
 const Activity = require('../model/ActivityBackLinks')
 const paginate = require('../helper/paginate')
+const moment = require('moment')
 
 exports.createBackLinks = async (req, res) => {
     try {
         const backLinkData = { ...req.body }
+        const oldData = await BackLinks.findOne({ $and: [{ webpage: backLinkData.webpage }, { monthYear: backLinkData.monthYear }] })
+        if (oldData) {
+            return res.json({ data: [], status: false, message: "Back Link already created for this webpage with same month-year!!" })
+        }
         const backLink = await BackLinks.create(backLinkData)
         if (!backLink) {
             return res.json({ data: [], status: false, message: "Something went wrong! Not able to create Back Link!!" })
@@ -13,7 +18,9 @@ exports.createBackLinks = async (req, res) => {
             backLinksId: backLink._id,
             addedBy: req.logInid,
             details: 'Back Link Created.',
-            time: backLink.createdAt
+            time: backLink.createdAt,
+            monthYear: backLink.monthYear,
+            numberOfBacklinks: backLink.numberOfBacklinks
         }
         await Activity.create(activityData)
         return res.json({ data: [backLink], status: true, message: 'Back Link created successfully!!' })
@@ -29,21 +36,34 @@ exports.updateBackLinks = async (req, res) => {
             return res.json({ data: [], status: false, message: "This back link is not exist!!" })
         }
         const linkData = { ...req.body }
+        if (Object.keys(linkData).length === 0) {
+            return res.json({ data: [], status: false, message: "Cannot update empty object!!" })
+        }
+        const updatedFields = [], updatedValues = []
+        let fieldList = ['-_id']
+        Object.keys(req.body).forEach(function (fields) {
+            fieldList.push(fields)
+            updatedFields.push(' ' + fields)
+        })
+        Object.values(req.body).forEach(function (value) {
+            updatedValues.push(value)
+        })
+        const oldLinkData = await BackLinks.findById(req.params.id).select(fieldList)
         const updateLink = await BackLinks.findByIdAndUpdate(req.params.id, linkData)
         if (!updateLink) {
             return res.json({ data: [], status: false, message: 'Not able to update Content Scheduler!!' })
         }
-        const updatedFields = []
-        Object.keys(req.body).forEach(function (fields) {
-            updatedFields.push(' ' + fields)
-        });
+
         const activityData = {
             backLinksId: checkLink._id,
             addedBy: req.logInid,
             activityName: 'Updated',
-            fields: updatedFields,
+            oldData: oldLinkData,
+            newData: linkData,
             details: 'Updated ' + updatedFields + ' Fields.',
-            time: checkLink.updatedAt
+            time: checkLink.updatedAt,
+            monthYear: linkData.monthYear,
+            numberOfBacklinks: linkData.numberOfBacklinks
         }
         await Activity.create(activityData)
         return res.json({ data: [], status: true, message: 'Back Link updated!!' })
@@ -77,9 +97,6 @@ exports.getBackLinks = async (req, res) => {
         if (!option.hasOwnProperty('query')) {
             option['query'] = {};
         }
-        // if (!option.options.hasOwnProperty('sort')) {
-        //     option['sort'] = {};
-        // }
         option.query['isDeleted'] = false
         const backLinks = await paginate(option, BackLinks);
         return res.json({ data: [backLinks], status: false, message: "" });
@@ -121,28 +138,24 @@ exports.viewActivity = async (req, res) => {
 
 exports.history = async (req, res) => {
     try {
-        // const currentMonth = new Date().toLocaleString('default', { month: 'short' })
-        // const lastYearMonth = Date.now() + -365 * 24 * 3600000
-        // const d = new Date(lastYearMonth).toLocaleString('default', { month: 'short' })
         let monthYear = [], data = []
-        for (let i = 24; i >= 2; i--) {
-            const date = Date.now() + -365 * i * 3600000
-            const nextMonth = Date.now() + -365 * (i - 2) * 3600000
-            const dateFormat = new Date(date).toISOString()
-            const nextDateFormat = new Date(nextMonth).toISOString()
-            const month = new Date(date).toLocaleString('default', { month: 'short' })
-            const year = new Date(date).getFullYear();
-            const betweenDate = { $lte: nextDateFormat, $gte: dateFormat }
-            console.log('Dates ==>', betweenDate)
-            const monthWise = await BackLinks.find({ $and: [{ isDeleted: false }, { monthYear: betweenDate }, { webpage: req.params.id }] })
-            console.log('Data ==>', monthWise)
+        const date = new Date();
+        const firstDay = new Date(date.getFullYear(), date.getMonth(), 1)
+        var dateFrom = moment(firstDay).subtract(1, 'years')
+        let lastMOnth
+        for (let i = 1; i <= 12; i++) {
+            let nextMonth = moment(dateFrom).add(i, 'months')
+            lastMOnth = moment(nextMonth).subtract(1, 'months')
+            const month = moment(lastMOnth).format('MMM')
+            const year = moment(lastMOnth).format('YYYY');
+            const betweenDate = { $lte: nextMonth, $gt: lastMOnth }
+            const monthWise = await Activity.find({ $and: [{ isDeleted: false }, { monthYear: betweenDate }, { backLinksId: req.params.id }] })
             let count = 0
             monthWise.forEach(element => {
                 count = count + element.numberOfBacklinks
             });
             monthYear.push(`${month} - ${year}`)
             data.push(count)
-            i--
         }
         return res.json({ data: { data: data, months: monthYear }, status: true, message: "Last 1 Year's Data." })
 

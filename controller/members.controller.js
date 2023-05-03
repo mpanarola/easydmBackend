@@ -23,7 +23,6 @@ exports.updateMember = async (req, res) => {
         if (!checkUser) {
             return res.json({ data: [], status: false, message: 'This member is not available!!' })
         }
-        console.log('Body Data ==>', req.body)
         const userData = { ...req.body }
         let avatar = "";
         if (req.file !== undefined) {

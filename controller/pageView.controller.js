@@ -1,10 +1,15 @@
 const PageView = require('../model/PageViews')
 const Activity = require('../model/ActivityPageViews')
 const paginate = require('../helper/paginate')
+const moment = require('moment')
 
 exports.createPageView = async (req, res) => {
     try {
         const pageViewData = { ...req.body }
+        const oldData = await PageView.findOne({ $and: [{ webpage: pageViewData.webpage }, { monthYear: pageViewData.monthYear }] })
+        if (oldData) {
+            return res.json({ data: [], status: false, message: "Page View already created for this webpage with same month-year!!" })
+        }
         const pageView = await PageView.create(pageViewData)
         if (!pageView) {
             return res.json({ data: [], status: false, message: "Something went wrong! Not able to create Page view!!" })
@@ -13,7 +18,9 @@ exports.createPageView = async (req, res) => {
             pageViewsId: pageView._id,
             addedBy: req.logInid,
             details: 'Page view Created.',
-            time: pageView.createdAt
+            time: pageView.createdAt,
+            monthYear: pageView.monthYear,
+            numberOfPageviews: pageView.numberOfPageviews
         }
         await Activity.create(activityData)
         return res.json({ data: [pageView], status: true, message: 'Page view created successfully!!' })
@@ -29,21 +36,33 @@ exports.updatePageView = async (req, res) => {
             return res.json({ data: [], status: false, message: "This Page view is not exist!!" })
         }
         const viewData = { ...req.body }
+        if (Object.keys(viewData).length === 0) {
+            return res.json({ data: [], status: false, message: "Cannot update empty object!!" })
+        }
+        const updatedFields = [], updatedValues = []
+        let fieldList = ['-_id']
+        Object.keys(req.body).forEach(function (fields) {
+            updatedFields.push(' ' + fields)
+        })
+        Object.values(req.body).forEach(function (value) {
+            updatedValues.push(value)
+        })
+        const oldViewData = await PageView.findById(req.params.id).select(fieldList)
         const updateView = await PageView.findByIdAndUpdate(req.params.id, viewData)
         if (!updateView) {
             return res.json({ data: [], status: false, message: 'Not able to update page view!!' })
         }
-        const updatedFields = []
-        Object.keys(req.body).forEach(function (fields) {
-            updatedFields.push(' ' + fields)
-        });
+
         const activityData = {
             pageViewsId: checkView._id,
             addedBy: req.logInid,
             activityName: 'Updated',
-            fields: updatedFields,
+            oldData: oldViewData,
+            newData: viewData,
             details: 'Updated ' + updatedFields + ' Fields.',
-            time: checkView.updatedAt
+            time: checkView.updatedAt,
+            monthYear: viewData.monthYear,
+            numberOfPageviews: viewData.numberOfPageviews
         }
         await Activity.create(activityData)
         return res.json({ data: [updateView], status: true, message: 'Page view updated!!' })
@@ -136,27 +155,53 @@ exports.viewActivity = async (req, res) => {
 //     }
 // }
 
+// exports.history = async (req, res) => {
+//     try {
+//         let monthYear = [], data = []
+//         for (let i = 24; i >= 2; i--) {
+//             const date = Date.now() + -365 * i * 3600000
+//             const nextMonth = Date.now() + -365 * (i - 2) * 3600000
+//             const dateFormat = new Date(date).toISOString()
+//             const nextDateFormat = new Date(nextMonth).toISOString()
+//             const month = new Date(date).toLocaleString('default', { month: 'short' })
+//             const year = new Date(date).getFullYear();
+//             const betweenDate = { $lte: nextDateFormat, $gte: dateFormat }
+//             const monthWise = await PageView.find({ $and: [{ isDeleted: false }, { monthYear: betweenDate }, { webpage: req.params.id }] })
+//             let count = 0
+//             monthWise.forEach(element => {
+//                 count = count + element.numberOfPageviews
+//             });
+//             monthYear.push(`${month} - ${year}`)
+//             data.push(count)
+//             i--
+//         }
+//         return res.json({ data: { data: data, months: monthYear }, status: true, message: "Last 1 Year's Data." })
+
+//     } catch (error) {
+//         return res.json({ data: [], status: false, message: error.message })
+//     }
+// }
+
 exports.history = async (req, res) => {
     try {
         let monthYear = [], data = []
-        for (let i = 24; i >= 2; i--) {
-            const date = Date.now() + -365 * i * 3600000
-            const nextMonth = Date.now() + -365 * (i - 2) * 3600000
-            const dateFormat = new Date(date).toISOString()
-            const nextDateFormat = new Date(nextMonth).toISOString()
-            const month = new Date(date).toLocaleString('default', { month: 'short' })
-            const year = new Date(date).getFullYear();
-            const betweenDate = { $lte: nextDateFormat, $gte: dateFormat }
-            console.log('Dates ==>', betweenDate)
-            const monthWise = await PageView.find({ $and: [{ isDeleted: false }, { monthYear: betweenDate }, { webpage: req.params.id }] })
-            console.log('Data ==>', monthWise)
+        const date = new Date();
+        const firstDay = new Date(date.getFullYear(), date.getMonth(), 1)
+        var dateFrom = moment(firstDay).subtract(1, 'years')
+        let lastMOnth
+        for (let i = 1; i <= 12; i++) {
+            let nextMonth = moment(dateFrom).add(i, 'months')
+            lastMOnth = moment(nextMonth).subtract(1, 'months')
+            const month = moment(lastMOnth).format('MMM')
+            const year = moment(lastMOnth).format('YYYY');
+            const betweenDate = { $lte: nextMonth, $gt: lastMOnth }
+            const monthWise = await Activity.find({ $and: [{ isDeleted: false }, { monthYear: betweenDate }, { pageViewsId: req.params.id }] })
             let count = 0
             monthWise.forEach(element => {
                 count = count + element.numberOfPageviews
             });
             monthYear.push(`${month} - ${year}`)
             data.push(count)
-            i--
         }
         return res.json({ data: { data: data, months: monthYear }, status: true, message: "Last 1 Year's Data." })
 

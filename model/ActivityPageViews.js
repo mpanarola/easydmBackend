@@ -12,7 +12,8 @@ const ActivityPageViewsSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
-    fields: [String],
+    newData: Object,
+    oldData: Object,
     activityName: {
         type: String,
         enum: ['Created', 'Updated'],
@@ -26,6 +27,8 @@ const ActivityPageViewsSchema = new mongoose.Schema({
         type: Date,
         require: true
     },
+    monthYear: Date,
+    numberOfPageviews: Number
 }, {
     timestamps: true
 })
