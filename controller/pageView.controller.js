@@ -111,7 +111,7 @@ exports.getPageViewById = async (req, res) => {
         if (!checkView) {
             return res.json({ data: [], status: false, message: "This Page view is not exist!!" })
         }
-        return res.json({ data: [checkView], status: true, message: '' })
+        return res.json({ data: [checkView], status: true, message: "Particular Page View data." })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -129,7 +129,7 @@ exports.viewActivity = async (req, res) => {
         if (!activityData) {
             return res.json({ data: [], status: false, message: 'Not able to fetch data for this Page view!!' })
         }
-        return res.json({ data: [activityData], status: true, message: '' })
+        return res.json({ data: [activityData], status: true, message: "All the activity data." })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -195,7 +195,7 @@ exports.history = async (req, res) => {
             const month = moment(lastMOnth).format('MMM')
             const year = moment(lastMOnth).format('YYYY');
             const betweenDate = { $lte: nextMonth, $gt: lastMOnth }
-            const monthWise = await Activity.find({ $and: [{ isDeleted: false }, { monthYear: betweenDate }, { pageViewsId: req.params.id }] })
+            const monthWise = await PageView.find({ $and: [{ isDeleted: false }, { monthYear: betweenDate }, { webpage: req.params.id }] })
             let count = 0
             monthWise.forEach(element => {
                 count = count + element.numberOfPageviews
@@ -204,7 +204,6 @@ exports.history = async (req, res) => {
             data.push(count)
         }
         return res.json({ data: { data: data, months: monthYear }, status: true, message: "Last 1 Year's Data." })
-
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }

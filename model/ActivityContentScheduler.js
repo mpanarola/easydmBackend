@@ -12,7 +12,8 @@ const ActivityContentSchedulerSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
-    fields: [String],
+    newData: Object,
+    oldData: Object,
     activityName: {
         type: String,
         enum: ['Created', 'Updated'],

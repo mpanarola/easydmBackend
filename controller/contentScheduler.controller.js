@@ -29,7 +29,7 @@ exports.getContentSchedulersById = async (req, res) => {
         if (!checkScheduler) {
             return res.json({ data: [], status: false, message: "This Content Scheduler is not exist!!" })
         }
-        return res.json({ data: [checkScheduler], status: true, message: "" })
+        return res.json({ data: [checkScheduler], status: true, message: "Selected content scheduler's data." })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -47,7 +47,7 @@ exports.viewActivity = async (req, res) => {
         if (!activityData) {
             return res.json({ data: [], status: false, message: 'Something went wrong! Not able fetch data for website!!' })
         }
-        return res.json({ data: [activityData], status: true, message: "" })
+        return res.json({ data: [activityData], status: true, message: "All the activity data." })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -60,19 +60,30 @@ exports.updateContentScheduler = async (req, res) => {
             return res.json({ data: [], status: false, message: 'This Content Scheduler is not exist!!' })
         }
         const schedulerData = { ...req.body }
+        if (Object.keys(schedulerData).length === 0) {
+            return res.json({ data: [], status: false, message: "Cannot update empty object!!" })
+        }
+        const updatedFields = [], updatedValues = []
+        let fieldList = ['-_id']
+        Object.keys(req.body).forEach(function (fields) {
+            fieldList.push(fields)
+            updatedFields.push(' ' + fields)
+        })
+        Object.values(req.body).forEach(function (value) {
+            updatedValues.push(value)
+        })
+        const oldSchedulerData = await ContentScheduler.findById(req.params.id).select(fieldList)
+
         const updateScheduler = await ContentScheduler.findByIdAndUpdate(req.params.id, schedulerData)
         if (!updateScheduler) {
             return res.json({ data: [], status: false, message: 'Not able to update Content Scheduler!!' })
         }
-        const updatedFields = []
-        Object.keys(req.body).forEach(function (fields) {
-            updatedFields.push(' ' + fields)
-        });
         const activityData = {
             contentSchedulerId: checkScheduler._id,
             addedBy: req.logInid,
             activityName: 'Updated',
-            fields: updatedFields,
+            oldData: oldSchedulerData,
+            newData: schedulerData,
             details: 'Updated ' + updatedFields + ' Fields.',
             time: checkScheduler.updatedAt
         }
@@ -111,7 +122,7 @@ exports.getContentScheduler = async (req, res, next) => {
         option.query['isDeleted'] = false
 
         const scheduler = await paginate(option, ContentScheduler);
-        return res.json({ data: [scheduler], status: false, message: "" });
+        return res.json({ data: [scheduler], status: false, message: "Get all Content Scheduler." });
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }

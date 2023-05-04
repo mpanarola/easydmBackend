@@ -88,7 +88,7 @@ exports.me = async (req, res) => {
         if (!user) {
             return res.json({ data: [], status: false, message: 'User does not exits!!' });
         }
-        return res.json({ data: [user], status: true, message: "" });
+        return res.json({ data: [user], status: true, message: "Logged in User's data." });
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }

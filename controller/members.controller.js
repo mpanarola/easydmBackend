@@ -24,6 +24,9 @@ exports.updateMember = async (req, res) => {
             return res.json({ data: [], status: false, message: 'This member is not available!!' })
         }
         const userData = { ...req.body }
+        if (Object.keys(userData).length === 0) {
+            return res.json({ data: [], status: false, message: "Cannot update empty object!!" })
+        }
         let avatar = "";
         if (req.file !== undefined) {
             avatar = req.file.filename;
@@ -72,7 +75,7 @@ exports.getMemberById = async (req, res) => {
         if (!checkMember) {
             return res.json({ data: [], status: false, message: "This member is not exist!!" })
         }
-        return res.json({ data: [checkMember], status: true, message: "All the members" })
+        return res.json({ data: [checkMember], status: true, message: "Particular member's data." })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }

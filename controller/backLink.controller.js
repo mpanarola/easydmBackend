@@ -99,7 +99,7 @@ exports.getBackLinks = async (req, res) => {
         }
         option.query['isDeleted'] = false
         const backLinks = await paginate(option, BackLinks);
-        return res.json({ data: [backLinks], status: false, message: "" });
+        return res.json({ data: [backLinks], status: false, message: "All the Back Links." });
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -112,7 +112,7 @@ exports.getBackLinksById = async (req, res) => {
         if (!checkLink) {
             return res.json({ data: [], status: false, message: "This back link is not exist!!" })
         }
-        return res.json({ data: [checkLink], status: true, message: '' })
+        return res.json({ data: [checkLink], status: true, message: "Particular Back Link's data." })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -130,7 +130,7 @@ exports.viewActivity = async (req, res) => {
         if (!activityData) {
             return res.json({ data: [], status: false, message: 'Not able to fetch data for this back link!!' })
         }
-        return res.json({ data: [activityData], status: true, message: '' })
+        return res.json({ data: [activityData], status: true, message: "All the activity data." })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -149,7 +149,7 @@ exports.history = async (req, res) => {
             const month = moment(lastMOnth).format('MMM')
             const year = moment(lastMOnth).format('YYYY');
             const betweenDate = { $lte: nextMonth, $gt: lastMOnth }
-            const monthWise = await Activity.find({ $and: [{ isDeleted: false }, { monthYear: betweenDate }, { backLinksId: req.params.id }] })
+            const monthWise = await BackLinks.find({ $and: [{ isDeleted: false }, { monthYear: betweenDate }, { webpage: req.params.id }] })
             let count = 0
             monthWise.forEach(element => {
                 count = count + element.numberOfBacklinks
@@ -158,7 +158,6 @@ exports.history = async (req, res) => {
             data.push(count)
         }
         return res.json({ data: { data: data, months: monthYear }, status: true, message: "Last 1 Year's Data." })
-
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }

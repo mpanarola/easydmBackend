@@ -12,6 +12,11 @@ const DayBookSchema = new mongoose.Schema({
         ref: 'Website',
         require: true
     },
+    category: {
+        type: String,
+        require: true,
+        enum: ["Services", "Blogs", "Industry", "Career", "Technologies"]
+    },
     creationDate: {
         type: Date,
         default: new Date()

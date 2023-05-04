@@ -32,19 +32,29 @@ exports.updateDayBook = async (req, res) => {
             return res.json({ data: [], status: false, message: "This Day Book is not exist!!" })
         }
         const dayBookData = { ...req.body }
+        if (Object.keys(dayBookData).length === 0) {
+            return res.json({ data: [], status: false, message: "Cannot update empty object!!" })
+        }
+        const updatedFields = [], updatedValues = []
+        let fieldList = ['-_id']
+        Object.keys(req.body).forEach(function (fields) {
+            fieldList.push(fields)
+            updatedFields.push(' ' + fields)
+        })
+        Object.values(req.body).forEach(function (value) {
+            updatedValues.push(value)
+        })
+        const oldBookData = await DayBook.findById(req.params.id).select(fieldList)
         const updateBook = await DayBook.findByIdAndUpdate(req.params.id, dayBookData)
         if (!updateBook) {
             return res.json({ data: [], status: false, message: 'Not able to update Day Book!!' })
         }
-        const updatedFields = []
-        Object.keys(req.body).forEach(function (fields) {
-            updatedFields.push(' ' + fields)
-        });
         const activityData = {
             dayBookId: checkBook._id,
             addedBy: req.logInid,
             activityName: 'Updated',
-            fields: updatedFields,
+            oldData: oldBookData,
+            newData: dayBookData,
             details: 'Updated ' + updatedFields + ' Fields.',
             time: checkBook.updatedAt
         }
@@ -121,6 +131,15 @@ exports.getDayBook = async (req, res) => {
             }
         ]
         if (req.body && req.body.hasOwnProperty('search')) {
+            let filter = {}
+            const keyword = req.body.search ? {
+                $or: [
+                    { firstName: { $regex: req.body.search, $options: 'i' } },
+                    { lastName: { $regex: req.body.search, $options: 'i' } },
+                    { mobileNo: { $regex: req.body.search, $options: 'i' } }
+                ]
+            } : {};
+            filter = keyword
             if (req.body.search.dateFrom) {
                 if (!req.body.search.dateTo) {
                     query.push(
@@ -211,7 +230,7 @@ exports.getDayBookOfUser = async (req, res) => {
         option.query['addedBy'] = checkUser._id
 
         const dayBookOfUser = await paginate(option, DayBook);
-        return res.json({ data: [dayBookOfUser], status: true, message: '' })
+        return res.json({ data: [dayBookOfUser], status: true, message: "User's day book data." })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -225,7 +244,7 @@ exports.getDayBookById = async (req, res) => {
         if (!checkBook) {
             return res.json({ data: [], status: false, message: "This Day Book is not exist!!" })
         }
-        return res.json({ data: [checkBook], status: true, message: '' })
+        return res.json({ data: [checkBook], status: true, message: "Particular Day book data." })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -243,7 +262,7 @@ exports.viewActivity = async (req, res) => {
         if (!activityData) {
             return res.json({ data: [], status: false, message: 'Not able to fetch data for this Day Book!!' })
         }
-        return res.json({ data: [activityData], status: true, message: '' })
+        return res.json({ data: [activityData], status: true, message: "All the acticity data." })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }

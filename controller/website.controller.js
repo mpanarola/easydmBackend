@@ -5,9 +5,13 @@ const paginate = require('../helper/paginate')
 exports.createWebsite = async (req, res) => {
     try {
         const data = { ...req.body }
+        const oldData = await Website.findOne({ webpage: data.webpage })
+        if (oldData) {
+            return res.json({ data: [], status: false, message: "Website already created with same name!!" })
+        }
         data.addedBy = req.logInid
-        const website = new Website(data)
-        const checkData = await website.save()
+        // const website = new Website(data)
+        const checkData = await Website.create(data)
         if (!checkData) {
             return res.json({ data: [], status: false, message: 'Something went wrong! Not able to add website!!' })
         }
@@ -37,7 +41,7 @@ exports.viewActivity = async (req, res) => {
         if (!activityData) {
             return res.json({ data: [], status: false, message: 'Something went wrong! Not able fetch data for website!!' })
         }
-        return res.json({ data: [activityData], status: true, message: "" })
+        return res.json({ data: [activityData], status: true, message: "All the activity data." })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -51,7 +55,7 @@ exports.getWebsiteById = async (req, res) => {
         if (!checkWebsite) {
             return res.json({ data: [], status: false, message: 'This website is not available!!' })
         }
-        return res.json({ data: [checkWebsite], status: true, message: "" })
+        return res.json({ data: [checkWebsite], status: true, message: "Particular website's data." })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -64,19 +68,30 @@ exports.updateWebsite = async (req, res) => {
             return res.json({ data: [], status: false, message: 'This website is not available!!' })
         }
         const websiteData = { ...req.body }
+        if (Object.keys(websiteData).length === 0) {
+            return res.json({ data: [], status: false, message: "Cannot update empty object!!" })
+        }
+        const updatedFields = [], updatedValues = []
+        let fieldList = ['-_id']
+        Object.keys(req.body).forEach(function (fields) {
+            fieldList.push(fields)
+            updatedFields.push(' ' + fields)
+        })
+        Object.values(req.body).forEach(function (value) {
+            updatedValues.push(value)
+        })
+        const oldWebsiteData = await Website.findById(req.params.id).select(fieldList)
         const checkUpdate = await Website.findByIdAndUpdate(req.params.id, websiteData)
         if (!checkUpdate) {
             return res.json({ data: [], status: false, message: 'Not able to update website!!' })
         }
-        const updatedFields = []
-        Object.keys(req.body).forEach(function (fields) {
-            updatedFields.push(' ' + fields)
-        });
+
         const activityData = {
             webpageId: checkWebsite._id,
             addedBy: req.logInid,
             activityName: 'Updated',
-            fields: updatedFields,
+            oldData: oldWebsiteData,
+            newData: websiteData,
             details: 'Updated ' + updatedFields + ' Fields.',
             time: checkUpdate.updatedAt
         }
