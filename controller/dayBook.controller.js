@@ -2,7 +2,7 @@ const DayBook = require('../model/DayBook')
 const Activity = require('../model/ActivityDayBook')
 const paginate = require('../helper/paginate')
 const User = require('../model/User')
-// const mongoose = require('mongoose')
+const mongoose = require('mongoose')
 
 exports.createDayBook = async (req, res) => {
     try {
@@ -33,7 +33,7 @@ exports.updateDayBook = async (req, res) => {
         }
         const dayBookData = { ...req.body }
         if (Object.keys(dayBookData).length === 0) {
-            return res.json({ data: [], status: false, message: "Cannot update empty object!!" })
+            return res.json({ data: [], status: true, message: "Cannot update empty object!!" })
         }
         const updatedFields = [], updatedValues = []
         let fieldList = ['-_id']
@@ -87,15 +87,6 @@ exports.deleteDayBook = async (req, res) => {
 exports.getDayBook = async (req, res) => {
     try {
         let query = [
-            // {
-            //     $match: {
-            //         $expr: {
-            //             $and: [
-            //                 { $eq: ["$webpage", req.params.id] },
-            //             ]
-            //         }
-            //     }
-            // },
             {
                 $lookup: {
                     from: 'User',
@@ -131,15 +122,6 @@ exports.getDayBook = async (req, res) => {
             }
         ]
         if (req.body && req.body.hasOwnProperty('search')) {
-            let filter = {}
-            const keyword = req.body.search ? {
-                $or: [
-                    { firstName: { $regex: req.body.search, $options: 'i' } },
-                    { lastName: { $regex: req.body.search, $options: 'i' } },
-                    { mobileNo: { $regex: req.body.search, $options: 'i' } }
-                ]
-            } : {};
-            filter = keyword
             if (req.body.search.dateFrom) {
                 if (!req.body.search.dateTo) {
                     query.push(
@@ -161,6 +143,27 @@ exports.getDayBook = async (req, res) => {
                     )
                 }
             }
+            if (req.body.search.category) {
+                query.push(
+                    {
+                        $match: { 'category': { $eq: req.body.search.category } }
+                    }
+                )
+            }
+            if (req.body.search.webpage) {
+                query.push(
+                    {
+                        $match: { 'webpage': { $eq: req.body.search.webpage } }
+                    }
+                )
+            }
+            if (req.body.search.addedBy) {
+                query.push(
+                    {
+                        $match: { 'addedBy': mongoose.Types.ObjectId(req.body.search.addedBy) }
+                    }
+                )
+            }
         }
 
 
@@ -178,14 +181,21 @@ exports.getDayBook = async (req, res) => {
                             "dayBookHour": "$hours",
                             "dayBookCreationDate": "$creationDate",
                             "dayBookDetails": "$details",
+                            "dayBookCategory": "$category",
                             "webpageName": "$webPageData.webpage",
                             "webpageURL": "$webPageData.webpageUrl",
-                            "webpageCategory": "$webPageData.category",
                             "webpageId": "$webPageData._id",
                         }
                     }
                 }
-            })
+            }
+            // ,
+            // {
+            //     $match: { _id: { $eq: mongoose.Schema.Types.ObjectId("64103519039f5ddcbc34b508") } }
+            // }
+        )
+
+
         const addPagination = await DayBook.aggregate(query)
         let totalData = addPagination.length
         let pageNo = 1, perPage = 10
@@ -209,6 +219,7 @@ exports.getDayBook = async (req, res) => {
             TotalPageData: endIndex,
             PageNo: pageNo
         }
+        console.log('Query Data ==>', query)
         const DayBookData = await DayBook.aggregate(query).skip(skip).limit(limit)
         return res.status(200).json({ data: [DayBookData, Pagination], status: true, message: "All user's the day book data" })
 

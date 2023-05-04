@@ -37,7 +37,7 @@ exports.updatePageView = async (req, res) => {
         }
         const viewData = { ...req.body }
         if (Object.keys(viewData).length === 0) {
-            return res.json({ data: [], status: false, message: "Cannot update empty object!!" })
+            return res.json({ data: [], status: true, message: "Cannot update empty object!!" })
         }
         const updatedFields = [], updatedValues = []
         let fieldList = ['-_id']

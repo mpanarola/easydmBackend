@@ -61,7 +61,7 @@ exports.updateContentScheduler = async (req, res) => {
         }
         const schedulerData = { ...req.body }
         if (Object.keys(schedulerData).length === 0) {
-            return res.json({ data: [], status: false, message: "Cannot update empty object!!" })
+            return res.json({ data: [], status: true, message: "Cannot update empty object!!" })
         }
         const updatedFields = [], updatedValues = []
         let fieldList = ['-_id']

@@ -25,7 +25,7 @@ exports.updateMember = async (req, res) => {
         }
         const userData = { ...req.body }
         if (Object.keys(userData).length === 0) {
-            return res.json({ data: [], status: false, message: "Cannot update empty object!!" })
+            return res.json({ data: [], status: true, message: "Cannot update empty object!!" })
         }
         let avatar = "";
         if (req.file !== undefined) {

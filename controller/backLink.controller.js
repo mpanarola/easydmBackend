@@ -37,7 +37,7 @@ exports.updateBackLinks = async (req, res) => {
         }
         const linkData = { ...req.body }
         if (Object.keys(linkData).length === 0) {
-            return res.json({ data: [], status: false, message: "Cannot update empty object!!" })
+            return res.json({ data: [], status: true, message: "Cannot update empty object!!" })
         }
         const updatedFields = [], updatedValues = []
         let fieldList = ['-_id']
