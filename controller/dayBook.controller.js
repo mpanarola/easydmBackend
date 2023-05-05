@@ -6,7 +6,10 @@ const mongoose = require('mongoose')
 
 exports.createDayBook = async (req, res) => {
     try {
-        const dayBookData = req.body
+        console.log('Body data ===>', req.body.data)
+        let dayBookData = req.body.data
+        // dayBookData.push()
+        console.log('Variable data ===>', dayBookData)
         dayBookData.forEach(async (element) => {
             element.addedBy = req.logInid
             const dayBook = await DayBook.create(element)
@@ -45,6 +48,7 @@ exports.updateDayBook = async (req, res) => {
         })
         const oldBookData = await DayBook.findById(req.params.id).select(fieldList)
         const updateBook = await DayBook.findByIdAndUpdate(req.params.id, dayBookData)
+        console.log('Updated Data ==>', updateBook)
         if (!updateBook) {
             return res.json({ data: [], status: false, message: 'Not able to update Day Book!!' })
         }
@@ -58,8 +62,10 @@ exports.updateDayBook = async (req, res) => {
             time: checkBook.updatedAt
         }
         await Activity.create(activityData)
-        return res.json({ data: [updateBook], status: true, message: 'Day Book updated!!' })
+        const n = await DayBook.findById(req.params.id)
+        return res.json({ data: [n], status: true, message: 'Day Book updated!!' })
     } catch (error) {
+        console.log('Error ==> ', error)
         return res.json({ data: [], status: false, message: error.message })
     }
 }
@@ -85,20 +91,25 @@ exports.deleteDayBook = async (req, res) => {
 
 exports.getDayBook = async (req, res) => {
     try {
+        // const check = await DayBook.find({ webpage: req.body.search.webpage })
+        // console.log('Check data  ==>', check)
+        const filter = []
+        // let webpage = ObjectId(req.body.search.webpage)
+        // if (req.body.search.category) {
+        //     filter.push({ 'category': { $eq: req.body.search.category } })
+        // }
+        // if (req.body.search.webpage) {
+        //     filter.push({ 'webpage': mongoose.Types.ObjectId(req.body.search.webpage) })
+
+        // }
         let query = [
             {
                 $sort: { 'createdAt': -1 }
-                // ,
-                // $match: {
-                //     'webpage': req.body.search.webpage
-                // }
-            },
+            }
+            ,
             // {
             //     $match: {
-            //         $and: [
-            //             { 'webpage': req.body.search.webpage }
-            //         ],
-
+            //         $and: filter
             //     }
             // },
             {
@@ -180,15 +191,15 @@ exports.getDayBook = async (req, res) => {
             // }
         }
 
-        let _id = '$userData._id'
-        if (req.body.search.userId) {
-            _id = req.body.search.userId
-        }
+        // let _id = '$userData._id'
+        // if (req.body.search.userId) {
+        //     _id = req.body.search.userId
+        // }
         query.push(
             {
                 $group:
                 {
-                    _id: _id,
+                    _id: '$userData._id',
                     totalHours: { $sum: '$hours' },
                     info: {
                         $push: {
@@ -196,13 +207,13 @@ exports.getDayBook = async (req, res) => {
                             "avatar": "$userData.avatar",
                             "userId": "$userData._id",
                             "dayBookId": "$_id",
-                            "dayBookHour": "$hours",
-                            "dayBookCreationDate": "$creationDate",
-                            "dayBookDetails": "$details",
-                            "dayBookCategory": "$category",
+                            "hours": "$hours",
+                            "creationDate": "$creationDate",
+                            "details": "$details",
+                            "category": "$category",
                             "webpageName": "$webPageData.webpage",
                             "webpageURL": "$webPageData.webpageUrl",
-                            "webpageId": "$webPageData._id",
+                            "webpage": "$webpage",
                         }
                     }
                 }
@@ -213,7 +224,7 @@ exports.getDayBook = async (req, res) => {
             // }
         )
 
-        const count = await DayBook.aggregate(query).select('totalHours')
+        const count = await DayBook.aggregate(query)
         console.log('Count hours ==>', count)
         const addPagination = await DayBook.aggregate(query)
         let totalData = addPagination.length
@@ -243,6 +254,7 @@ exports.getDayBook = async (req, res) => {
         return res.status(200).json({ data: [DayBookData, Pagination], status: true, message: "All user's the day book data" })
 
     } catch (error) {
+        console.log('error', error)
         return res.json({ data: [], status: false, message: error.message })
     }
 }
