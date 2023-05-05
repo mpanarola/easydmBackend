@@ -6,20 +6,19 @@ const mongoose = require('mongoose')
 
 exports.createDayBook = async (req, res) => {
     try {
-        const dayBookData = { ...req.body }
-        dayBookData.addedBy = req.logInid
-        const dayBook = await DayBook.create(dayBookData)
-        if (!dayBook) {
-            return res.json({ data: [], status: false, message: "Something went wrong! Not able to create day book!!" })
-        }
-        const activityData = {
-            dayBookId: dayBook._id,
-            addedBy: req.logInid,
-            details: 'Day Book Created.',
-            time: dayBook.createdAt
-        }
-        await Activity.create(activityData)
-        return res.json({ data: [dayBook], status: true, message: 'Day book created successfully!!' })
+        const dayBookData = req.body
+        dayBookData.forEach(async (element) => {
+            element.addedBy = req.logInid
+            const dayBook = await DayBook.create(element)
+            const activityData = {
+                dayBookId: dayBook._id,
+                addedBy: req.logInid,
+                details: 'Day Book Created.',
+                time: dayBook.createdAt
+            }
+            await Activity.create(activityData)
+        });
+        return res.json({ data: [], status: true, message: 'Day book created successfully!!' })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -88,6 +87,21 @@ exports.getDayBook = async (req, res) => {
     try {
         let query = [
             {
+                $sort: { 'createdAt': -1 }
+                // ,
+                // $match: {
+                //     'webpage': req.body.search.webpage
+                // }
+            },
+            // {
+            //     $match: {
+            //         $and: [
+            //             { 'webpage': req.body.search.webpage }
+            //         ],
+
+            //     }
+            // },
+            {
                 $lookup: {
                     from: 'User',
                     localField: 'addedBy',
@@ -143,40 +157,44 @@ exports.getDayBook = async (req, res) => {
                     )
                 }
             }
-            if (req.body.search.category) {
-                query.push(
-                    {
-                        $match: { 'category': { $eq: req.body.search.category } }
-                    }
-                )
-            }
-            if (req.body.search.webpage) {
-                query.push(
-                    {
-                        $match: { 'webpage': { $eq: req.body.search.webpage } }
-                    }
-                )
-            }
-            if (req.body.search.addedBy) {
-                query.push(
-                    {
-                        $match: { 'addedBy': mongoose.Types.ObjectId(req.body.search.addedBy) }
-                    }
-                )
-            }
+            // if (req.body.search.category) {
+            //     query.push(
+            //         {
+            //             $match: { 'category': { $eq: req.body.search.category } }
+            //         }
+            //     )
+            // }
+            // if (req.body.search.webpage) {
+            //     query.push(
+            //         {
+            //             $match: { 'webpage': { $eq: req.body.search.webpage } }
+            //         }
+            //     )
+            // }
+            // if (req.body.search.userId) {
+            //     query.push(
+            //         {
+            //             $match: { 'userId': req.body.search.userId }
+            //         }
+            //     )
+            // }
         }
 
-
+        let _id = '$userData._id'
+        if (req.body.search.userId) {
+            _id = req.body.search.userId
+        }
         query.push(
             {
                 $group:
                 {
-                    _id: '$userData._id',
+                    _id: _id,
                     totalHours: { $sum: '$hours' },
                     info: {
                         $push: {
                             "userName": "$userData.name",
                             "avatar": "$userData.avatar",
+                            "userId": "$userData._id",
                             "dayBookId": "$_id",
                             "dayBookHour": "$hours",
                             "dayBookCreationDate": "$creationDate",
@@ -195,7 +213,8 @@ exports.getDayBook = async (req, res) => {
             // }
         )
 
-
+        const count = await DayBook.aggregate(query).select('totalHours')
+        console.log('Count hours ==>', count)
         const addPagination = await DayBook.aggregate(query)
         let totalData = addPagination.length
         let pageNo = 1, perPage = 10
