@@ -91,27 +91,28 @@ exports.deleteDayBook = async (req, res) => {
 
 exports.getDayBook = async (req, res) => {
     try {
-        // const check = await DayBook.find({ webpage: req.body.search.webpage })
-        // console.log('Check data  ==>', check)
-        const filter = []
-        // let webpage = ObjectId(req.body.search.webpage)
-        // if (req.body.search.category) {
-        //     filter.push({ 'category': { $eq: req.body.search.category } })
-        // }
-        // if (req.body.search.webpage) {
-        //     filter.push({ 'webpage': mongoose.Types.ObjectId(req.body.search.webpage) })
-
-        // }
+        const filter = [{}]
+        if (req.body && req.body.hasOwnProperty('search')) {
+            if (req.body.search.category) {
+                filter.push({ 'category': { $eq: req.body.search.category } })
+            }
+            if (req.body.search.webpage) {
+                filter.push({ 'webpage': new mongoose.Types.ObjectId(req.body.search.webpage) })
+            }
+            if (req.body.search.member) {
+                filter.push({ 'addedBy': new mongoose.Types.ObjectId(req.body.search.member) })
+            }
+        }
         let query = [
             {
                 $sort: { 'createdAt': -1 }
             }
             ,
-            // {
-            //     $match: {
-            //         $and: filter
-            //     }
-            // },
+            {
+                $match: {
+                    $and: filter
+                }
+            },
             {
                 $lookup: {
                     from: 'User',
@@ -168,33 +169,7 @@ exports.getDayBook = async (req, res) => {
                     )
                 }
             }
-            // if (req.body.search.category) {
-            //     query.push(
-            //         {
-            //             $match: { 'category': { $eq: req.body.search.category } }
-            //         }
-            //     )
-            // }
-            // if (req.body.search.webpage) {
-            //     query.push(
-            //         {
-            //             $match: { 'webpage': { $eq: req.body.search.webpage } }
-            //         }
-            //     )
-            // }
-            // if (req.body.search.userId) {
-            //     query.push(
-            //         {
-            //             $match: { 'userId': req.body.search.userId }
-            //         }
-            //     )
-            // }
         }
-
-        // let _id = '$userData._id'
-        // if (req.body.search.userId) {
-        //     _id = req.body.search.userId
-        // }
         query.push(
             {
                 $group:
@@ -205,12 +180,13 @@ exports.getDayBook = async (req, res) => {
                         $push: {
                             "userName": "$userData.name",
                             "avatar": "$userData.avatar",
-                            "userId": "$userData._id",
+                            "addedBy": "$userData._id",
                             "dayBookId": "$_id",
                             "hours": "$hours",
                             "creationDate": "$creationDate",
                             "details": "$details",
                             "category": "$category",
+                            "member": "$addedBy",
                             "webpageName": "$webPageData.webpage",
                             "webpageURL": "$webPageData.webpageUrl",
                             "webpage": "$webpage",
@@ -218,10 +194,6 @@ exports.getDayBook = async (req, res) => {
                     }
                 }
             }
-            // ,
-            // {
-            //     $match: { _id: { $eq: mongoose.Schema.Types.ObjectId("64103519039f5ddcbc34b508") } }
-            // }
         )
 
         const count = await DayBook.aggregate(query)
@@ -234,7 +206,7 @@ exports.getDayBook = async (req, res) => {
             perPage = req.body.perPage
         }
         let page = (pageNo) ? parseInt(pageNo) : 1
-        let limit = (perPage) ? parseInt(perPage) : 10
+        let limit = (perPage) ? parseInt(perPage) : 50
         let skip = (page - 1) * limit
 
         let endIndex = page * limit
