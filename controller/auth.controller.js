@@ -60,6 +60,9 @@ exports.login = async (req, res) => {
         }
 
         let user = await User.findOne(filter)
+        if (user.isActive === false) {
+            return res.json({ data: [], status: false, message: 'Your account is deactivated!!' });
+        }
         if (!user) {
             return res.json({ data: [], status: false, message: 'User does not exist!!' });
         }

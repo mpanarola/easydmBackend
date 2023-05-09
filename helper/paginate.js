@@ -2,7 +2,7 @@ async function paginate(params, model) {
     let search = null;
     let query = {};
     let $or = [];
-    let options = { pagination: true };
+    let options = { pagination: false };
     if (params.hasOwnProperty('search')) {
         search = params.search;
         delete params.search;

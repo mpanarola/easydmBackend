@@ -16,8 +16,6 @@ app.use(morgan('tiny'))
 // app.set('views', path.join(__dirname, '/views'));
 
 app.use("/avatar", express.static(path.join(__dirname, '/public/avatar')));
-// app.use("/image", express.static(path.join(__dirname, '/public/ScienceFair')));
-// app.use("/csv", express.static(path.join(__dirname, '/public/csv')));
 
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*")
@@ -27,7 +25,7 @@ app.use((req, res, next) => {
     );
     next();
 })
-app.use('/api', route)
+app.use(route)
 
 const PORT = process.env.PORT || 8080
 app.listen(PORT, () => {

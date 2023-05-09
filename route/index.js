@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-router.use(
+router.use('/api',
     require('./auth.route'),
     require('./website.route'),
     require('./contentScheduler.route'),

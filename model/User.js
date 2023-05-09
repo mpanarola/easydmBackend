@@ -52,15 +52,6 @@ UserSchema.pre('save', async function (next) {
     next();
 })
 
-// UserSchema.pre('findByIdAndUpdate', async function (next) {
-//     console.log('Password ==>', this.password)
-//     if (this.isModified('password')) {
-//         const password = await bcrypt.hash(this.password, 10)
-//         this.set({ password: password })
-//     }
-//     next();
-// })
-
 mongoosePaginate.paginate.options = PAGINATE_OPTIONS;
 UserSchema.plugin(mongoosePaginate);
 
