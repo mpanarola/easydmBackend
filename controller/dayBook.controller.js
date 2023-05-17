@@ -105,9 +105,6 @@ exports.getDayBook = async (req, res) => {
         }
         let query = [
             {
-                $sort: { 'createdAt': -1 }
-            },
-            {
                 $match: {
                     $and: filter
                 }
@@ -169,6 +166,7 @@ exports.getDayBook = async (req, res) => {
                 }
             }
         }
+        query.push({ $sort: { createdAt: -1 } })
         query.push(
             {
                 $group:
@@ -189,12 +187,27 @@ exports.getDayBook = async (req, res) => {
                             "webpageName": "$webPageData.webpage",
                             "webpageURL": "$webPageData.webpageUrl",
                             "webpage": "$webpage",
+                            "createdAt": "$createdAt"
                         }
                     }
                 }
             }
+            // ,
+            // { $sort: { 'info.createdAt': -1 } },
+            // {
+            //     $project: {
+            //         _id: "$_id",
+            //         totalHours: "$totalHours",
+            //         userName: "$info.username",
+            //         avatar: "$info.avatar", addedBy: "$info.addedBy",
+            //         dayBookId: "$info.dayBookId", hours: "$info.hours",
+            //         creationDate: "$info.creationDate", details: "$info.details",
+            //         category: "$info.category", member: "$info.member",
+            //         webpageName: "$info.webpageName", webpageURL: "$info.webpageURL",
+            //         webpage: "$info.webpage", createdAt: "$info.createdAt"
+            //     }
+            // }
         )
-
         const addPagination = await DayBook.aggregate(query)
         let totalData = addPagination.length
         let pageNo = 1, perPage = 10
@@ -228,15 +241,15 @@ exports.getDayBook = async (req, res) => {
 
 exports.getDayBookOfUser = async (req, res) => {
     try {
-        const checkUser = await User.findById(req.params.id)
-        if (!checkUser) {
-            return res.json({ data: [], status: false, message: 'This user is not exist!!' })
-        }
+        // const checkUser = await User.findById(req.params.id)
+        // if (!checkUser) {
+        //     return res.json({ data: [], status: false, message: 'This user is not exist!!' })
+        // }
         const option = { ...req.body };
         if (!option.hasOwnProperty('query')) {
             option['query'] = {};
         }
-        option.query['addedBy'] = checkUser._id
+        // option.query['addedBy'] = checkUser._id
 
         const dayBookOfUser = await paginate(option, DayBook);
         return res.json({ data: [dayBookOfUser], status: true, message: "Data Listed Successfully" })
@@ -357,9 +370,6 @@ exports.userDayBookActivity = async (req, res) => {
         }
         let query = [
             {
-                $sort: { 'createdAt': -1 }
-            },
-            {
                 $match: {
                     $and: filter
                 }
@@ -412,6 +422,11 @@ exports.userDayBookActivity = async (req, res) => {
         }
         query.push(
             {
+                $sort: { 'createdAt': -1 }
+            }
+        )
+        query.push(
+            {
                 $group:
                 {
                     _id: '$userData._id',
@@ -428,6 +443,7 @@ exports.userDayBookActivity = async (req, res) => {
                             "category": "$category",
                             "member": "$addedBy",
                             "webpage": "$webpage",
+                            "createdAt": "$createdAt"
                         }
                     }
                 }

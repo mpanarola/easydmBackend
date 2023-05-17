@@ -72,18 +72,126 @@ exports.updateContentScheduler = async (req, res) => {
         Object.values(req.body).forEach(function (value) {
             updatedValues.push(value)
         })
-        const oldSchedulerData = await ContentScheduler.findById(req.params.id).select(fieldList)
+        let oldSchedulerData = await ContentScheduler.findById(req.params.id).select(fieldList)
+        let old = oldSchedulerData
+        if (req.body.hasOwnProperty('webpage') && req.body.hasOwnProperty('assignedBy') && req.body.hasOwnProperty('writtenBy')) {
+            oldSchedulerData = await ContentScheduler.findById(req.params.id).select(fieldList)
+                .populate('webpage', 'webpage webpageUrl category')
+                .populate('assignedBy', 'name email')
+                .populate('writtenBy', 'name email')
+            old = { ...oldSchedulerData }
+            old._doc.webpage = oldSchedulerData.webpage.webpage
+            old._doc.assignedBy = oldSchedulerData.assignedBy.name
+            old._doc.writtenBy = oldSchedulerData.writtenBy.name
+        }
+        if (req.body.hasOwnProperty('webpage') && !req.body.hasOwnProperty('assignedBy') && !req.body.hasOwnProperty('writtenBy')) {
+            oldSchedulerData = await ContentScheduler.findById(req.params.id).select(fieldList)
+                .populate('webpage', 'webpage webpageUrl category')
+            old = { ...oldSchedulerData }
+            old._doc.webpage = oldSchedulerData.webpage.webpage
+        }
+        if (!req.body.hasOwnProperty('webpage') && req.body.hasOwnProperty('assignedBy') && !req.body.hasOwnProperty('writtenBy')) {
+            oldSchedulerData = await ContentScheduler.findById(req.params.id).select(fieldList)
+                .populate('assignedBy', 'name email')
+            old = { ...oldSchedulerData }
+            old._doc.assignedBy = oldSchedulerData.assignedBy.nam
+        }
+        if (!req.body.hasOwnProperty('webpage') && !req.body.hasOwnProperty('assignedBy') && req.body.hasOwnProperty('writtenBy')) {
+            oldSchedulerData = await ContentScheduler.findById(req.params.id).select(fieldList)
+                .populate('writtenBy', 'name email')
+            old = { ...oldSchedulerData }
+            old._doc.writtenBy = oldSchedulerData.writtenBy.name
+        }
+        if (req.body.hasOwnProperty('webpage') && req.body.hasOwnProperty('assignedBy') && !req.body.hasOwnProperty('writtenBy')) {
+            oldSchedulerData = await ContentScheduler.findById(req.params.id).select(fieldList)
+                .populate('webpage', 'webpage webpageUrl category')
+                .populate('assignedBy', 'name email')
+            old = { ...oldSchedulerData }
+            old._doc.webpage = oldSchedulerData.webpage.webpage
+            old._doc.assignedBy = oldSchedulerData.assignedBy.name
+        }
+        if (!req.body.hasOwnProperty('webpage') && req.body.hasOwnProperty('assignedBy') && req.body.hasOwnProperty('writtenBy')) {
+            oldSchedulerData = await ContentScheduler.findById(req.params.id).select(fieldList)
+                .populate('assignedBy', 'name email')
+                .populate('writtenBy', 'name email')
+            old = { ...oldSchedulerData }
+            old._doc.assignedBy = oldSchedulerData.assignedBy.name
+            old._doc.writtenBy = oldSchedulerData.writtenBy.name
+        }
+        if (req.body.hasOwnProperty('webpage') && !req.body.hasOwnProperty('assignedBy') && req.body.hasOwnProperty('writtenBy')) {
+            oldSchedulerData = await ContentScheduler.findById(req.params.id).select(fieldList)
+                .populate('webpage', 'webpage webpageUrl category')
+                .populate('writtenBy', 'name email')
+            old = { ...oldSchedulerData }
+            old._doc.webpage = oldSchedulerData.webpage.webpage
+            old._doc.writtenBy = oldSchedulerData.writtenBy.name
+        }
 
         const updateScheduler = await ContentScheduler.findByIdAndUpdate(req.params.id, schedulerData)
         if (!updateScheduler) {
             return res.json({ data: [], status: false, message: 'Not able to update Content Scheduler!!' })
         }
+
+        let updatedData = await ContentScheduler.findById(req.params.id).select(fieldList)
+        let newData = updatedData
+        if (req.body.hasOwnProperty('webpage') && req.body.hasOwnProperty('assignedBy') && req.body.hasOwnProperty('writtenBy')) {
+            updatedData = await ContentScheduler.findById(req.params.id).select(fieldList)
+                .populate('webpage', 'webpage webpageUrl category')
+                .populate('assignedBy', 'name email')
+                .populate('writtenBy', 'name email')
+            newData = { ...updatedData }
+            newData._doc.webpage = updatedData.webpage.webpage
+            newData._doc.assignedBy = updatedData.assignedBy.name
+            newData._doc.writtenBy = updatedData.writtenBy.name
+        }
+        if (req.body.hasOwnProperty('webpage') && !req.body.hasOwnProperty('assignedBy') && !req.body.hasOwnProperty('writtenBy')) {
+            updatedData = await ContentScheduler.findById(req.params.id).select(fieldList)
+                .populate('webpage', 'webpage webpageUrl category')
+            newData = { ...updatedData }
+            newData._doc.webpage = updatedData.webpage.webpage
+        }
+        if (!req.body.hasOwnProperty('webpage') && req.body.hasOwnProperty('assignedBy') && !req.body.hasOwnProperty('writtenBy')) {
+            updatedData = await ContentScheduler.findById(req.params.id).select(fieldList)
+                .populate('assignedBy', 'name email')
+            newData = { ...updatedData }
+            newData._doc.assignedBy = updatedData.assignedBy.name
+        }
+        if (!req.body.hasOwnProperty('webpage') && !req.body.hasOwnProperty('assignedBy') && req.body.hasOwnProperty('writtenBy')) {
+            updatedData = await ContentScheduler.findById(req.params.id).select(fieldList)
+                .populate('writtenBy', 'name email')
+            newData = { ...updatedData }
+            newData._doc.writtenBy = updatedData.writtenBy.name
+        }
+        if (req.body.hasOwnProperty('webpage') && req.body.hasOwnProperty('assignedBy') && !req.body.hasOwnProperty('writtenBy')) {
+            updatedData = await ContentScheduler.findById(req.params.id).select(fieldList)
+                .populate('webpage', 'webpage webpageUrl category')
+                .populate('assignedBy', 'name email')
+            newData = { ...updatedData }
+            newData._doc.webpage = updatedData.webpage.webpage
+            newData._doc.assignedBy = updatedData.assignedBy.name
+        }
+        if (!req.body.hasOwnProperty('webpage') && req.body.hasOwnProperty('assignedBy') && req.body.hasOwnProperty('writtenBy')) {
+            updatedData = await ContentScheduler.findById(req.params.id).select(fieldList)
+                .populate('assignedBy', 'name email')
+                .populate('writtenBy', 'name email')
+            newData = { ...updatedData }
+            newData._doc.assignedBy = updatedData.assignedBy.name
+            newData._doc.writtenBy = updatedData.writtenBy.name
+        }
+        if (req.body.hasOwnProperty('webpage') && !req.body.hasOwnProperty('assignedBy') && req.body.hasOwnProperty('writtenBy')) {
+            updatedData = await ContentScheduler.findById(req.params.id).select(fieldList)
+                .populate('webpage', 'webpage webpageUrl category')
+                .populate('writtenBy', 'name email')
+            newData = { ...updatedData }
+            newData._doc.webpage = updatedData.webpage.webpage
+            newData._doc.writtenBy = updatedData.writtenBy.name
+        }
         const activityData = {
             contentSchedulerId: checkScheduler._id,
             addedBy: req.logInid,
             activityName: 'Updated',
-            oldData: oldSchedulerData,
-            newData: schedulerData,
+            oldData: old,
+            newData: newData,
             details: 'Updated ' + updatedFields + ' Fields.',
             time: checkScheduler.updatedAt
         }

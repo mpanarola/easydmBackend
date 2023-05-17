@@ -1,6 +1,8 @@
 const Website = require('../model/Website')
 const Activity = require('../model/ActivityWebsite')
 const paginate = require('../helper/paginate')
+const moment = require('moment')
+const PageViews = require('../model/PageViews')
 
 exports.createWebsite = async (req, res) => {
     try {
@@ -79,21 +81,45 @@ exports.updateWebsite = async (req, res) => {
         Object.values(req.body).forEach(function (value) {
             updatedValues.push(value)
         })
-        const oldWebsiteData = await Website.findById(req.params.id).select(fieldList)
+        let oldWebsiteData = await Website.findById(req.params.id).select(fieldList)
+        let old = oldWebsiteData
+        if (req.body.hasOwnProperty('assignedTo')) {
+            oldWebsiteData = await Website.findById(req.params.id).select(fieldList)
+                .populate('assignedTo', 'name email userRole userType')
+
+            old = { ...oldWebsiteData }
+            old._doc.assigne = []
+            oldWebsiteData.assignedTo.forEach(element => {
+                old._doc.assigne.push(element.name)
+            });
+        }
         const checkUpdate = await Website.findByIdAndUpdate(req.params.id, websiteData)
         if (!checkUpdate) {
             return res.json({ data: [], status: false, message: 'Not able to update website!!' })
+        }
+        let updatedData = await Website.findById(req.params.id).select(fieldList)
+        let newData = updatedData
+        if (req.body.hasOwnProperty('assignedTo')) {
+            updatedData = await Website.findById(req.params.id).select(fieldList)
+                .populate('assignedTo', 'name email userRole userType')
+
+            newData = { ...updatedData }
+            newData._doc.assigne = []
+            updatedData.assignedTo.forEach(element => {
+                newData._doc.assigne.push(element.name)
+            });
         }
 
         const activityData = {
             webpageId: checkWebsite._id,
             addedBy: req.logInid,
             activityName: 'Updated',
-            oldData: oldWebsiteData,
-            newData: websiteData,
+            oldData: old,
+            newData: newData,
             details: 'Updated ' + updatedFields + ' Fields.',
             time: checkUpdate.updatedAt
         }
+
         await Activity.create(activityData)
         return res.json({ data: [checkUpdate], status: true, message: 'Website updated!!' })
     } catch (error) {
@@ -130,6 +156,82 @@ exports.getWebsites = async (req, res, next) => {
 
         const websites = await paginate(option, Website);
         return res.json({ data: [websites], status: true, message: "Data Listed Successfully" });
+    } catch (error) {
+        return res.json({ data: [], status: false, message: error.message })
+    }
+}
+
+exports.dashboard = async (req, res, next) => {
+    try {
+        var lastMonth = moment().subtract(3, 'month').startOf('month').format('YYYY-MM-DD hh:mm')
+        var latestMonth = moment().startOf('month').format('YYYY-MM-DD hh:mm')
+        // const mostViewedWebpages = await PageViews.find({ monthYear: { $lte: latestMonth, $gt: lastMonth } })
+        //     .populate('webpage', 'webpage webpageUrl category assignedBy')
+        //     .sort({ numberOfPageviews: -1 })
+
+        let query = [
+            {
+                $lookup: {
+                    from: 'Website',
+                    localField: 'webpage',
+                    foreignField: '_id',
+                    as: 'webpageData',
+                }
+            },
+            {
+                $unwind: '$webpageData'
+            },
+            // {
+            //     $match: {
+            //         $and: [
+            //             { 'monthYear': { $gt: lastMonth } },
+            //             { 'monthYear': { $lte: latestMonth } }
+            //         ]
+            //     }
+            // },
+            {
+                $group:
+                {
+                    _id: '$webpage',
+                    totalViews: { $sum: '$numberOfPageviews' },
+                    info: {
+                        $push: {
+                            "userName": "$webPageData.assignedBy",
+                            "webpageName": "$webPageData.webpage",
+                            "webpageURL": "$webPageData.webpageUrl",
+                            "webpage": "$webpage",
+                            "publishedOn": "$publishedOn",
+                            "monthYear": "$monthYear",
+                            "numberOfPageviews": "$numberOfPageviews",
+                            "readability": "$readability",
+                            "seo": "$seo",
+                            "toneOfVoice": "$toneOfVoice",
+                            "originality": "$originality",
+                            "contentScore": "$contentScore"
+                        }
+                    }
+                }
+            }
+            , { $sort: { totalViews: -1 } }
+        ]
+
+        const mostViewedWebpages = await PageViews.aggregate(query)
+        // for (let i = 1; i <= 12; i++) {
+        //     let nextMonth = moment(dateFrom).add(i, 'months')
+        //     lastMOnth = moment(nextMonth).subtract(1, 'months')
+        //     const month = moment(lastMOnth).format('MMM')
+        //     const year = moment(lastMOnth).format('YYYY');
+        //     const betweenDate = { $lte: nextMonth, $gt: lastMOnth }
+        //     const monthWise = await PageView.find({ $and: [{ isDeleted: false }, { monthYear: betweenDate }, { webpage: req.params.id }] })
+        //     let count = 0
+        //     monthWise.forEach(element => {
+        //         count = count + element.numberOfPageviews
+        //     });
+        //     monthYear.push(`${month} - ${year}`)
+        //     data.push(count)
+        // }
+
+        return res.json({ data: { data: mostViewedWebpages }, status: true, message: "Last 3 Month's Data." })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
