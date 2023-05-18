@@ -82,15 +82,12 @@ exports.updateWebsite = async (req, res) => {
             updatedValues.push(value)
         })
         let oldWebsiteData = await Website.findById(req.params.id).select(fieldList)
-        let old = oldWebsiteData
         if (req.body.hasOwnProperty('assignedTo')) {
             oldWebsiteData = await Website.findById(req.params.id).select(fieldList)
                 .populate('assignedTo', 'name email userRole userType')
-
-            old = { ...oldWebsiteData }
-            old._doc.assigne = []
+            oldWebsiteData._doc.assigne = []
             oldWebsiteData.assignedTo.forEach(element => {
-                old._doc.assigne.push(element.name)
+                oldWebsiteData._doc.assigne.push(element.name)
             });
         }
         const checkUpdate = await Website.findByIdAndUpdate(req.params.id, websiteData)
@@ -98,15 +95,12 @@ exports.updateWebsite = async (req, res) => {
             return res.json({ data: [], status: false, message: 'Not able to update website!!' })
         }
         let updatedData = await Website.findById(req.params.id).select(fieldList)
-        let newData = updatedData
         if (req.body.hasOwnProperty('assignedTo')) {
             updatedData = await Website.findById(req.params.id).select(fieldList)
                 .populate('assignedTo', 'name email userRole userType')
-
-            newData = { ...updatedData }
-            newData._doc.assigne = []
+            updatedData._doc.assigne = []
             updatedData.assignedTo.forEach(element => {
-                newData._doc.assigne.push(element.name)
+                updatedData._doc.assigne.push(element.name)
             });
         }
 
@@ -149,11 +143,6 @@ exports.deleteWebsite = async (req, res) => {
 exports.getWebsites = async (req, res, next) => {
     try {
         const option = { ...req.body };
-        if (!option.hasOwnProperty('query')) {
-            option['query'] = {};
-        }
-        option.query['isDeleted'] = false
-
         const websites = await paginate(option, Website);
         return res.json({ data: [websites], status: true, message: "Data Listed Successfully" });
     } catch (error) {
@@ -165,9 +154,6 @@ exports.dashboard = async (req, res, next) => {
     try {
         var lastMonth = moment().subtract(3, 'month').startOf('month').format('YYYY-MM-DD hh:mm')
         var latestMonth = moment().startOf('month').format('YYYY-MM-DD hh:mm')
-        // const mostViewedWebpages = await PageViews.find({ monthYear: { $lte: latestMonth, $gt: lastMonth } })
-        //     .populate('webpage', 'webpage webpageUrl category assignedBy')
-        //     .sort({ numberOfPageviews: -1 })
 
         let query = [
             {
@@ -181,14 +167,14 @@ exports.dashboard = async (req, res, next) => {
             {
                 $unwind: '$webpageData'
             },
-            // {
-            //     $match: {
-            //         $and: [
-            //             { 'monthYear': { $gt: lastMonth } },
-            //             { 'monthYear': { $lte: latestMonth } }
-            //         ]
-            //     }
-            // },
+            {
+                $match: {
+                    $and: [
+                        { 'monthYear': { $gt: new Date(lastMonth) } },
+                        { 'monthYear': { $lte: new Date(latestMonth) } }
+                    ]
+                }
+            },
             {
                 $group:
                 {
@@ -211,26 +197,12 @@ exports.dashboard = async (req, res, next) => {
                         }
                     }
                 }
+            },
+            {
+                $sort: { totalViews: -1 }
             }
-            , { $sort: { totalViews: -1 } }
         ]
-
         const mostViewedWebpages = await PageViews.aggregate(query)
-        // for (let i = 1; i <= 12; i++) {
-        //     let nextMonth = moment(dateFrom).add(i, 'months')
-        //     lastMOnth = moment(nextMonth).subtract(1, 'months')
-        //     const month = moment(lastMOnth).format('MMM')
-        //     const year = moment(lastMOnth).format('YYYY');
-        //     const betweenDate = { $lte: nextMonth, $gt: lastMOnth }
-        //     const monthWise = await PageView.find({ $and: [{ isDeleted: false }, { monthYear: betweenDate }, { webpage: req.params.id }] })
-        //     let count = 0
-        //     monthWise.forEach(element => {
-        //         count = count + element.numberOfPageviews
-        //     });
-        //     monthYear.push(`${month} - ${year}`)
-        //     data.push(count)
-        // }
-
         return res.json({ data: { data: mostViewedWebpages }, status: true, message: "Last 3 Month's Data." })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
