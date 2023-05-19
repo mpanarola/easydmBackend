@@ -108,8 +108,8 @@ exports.updateWebsite = async (req, res) => {
             webpageId: checkWebsite._id,
             addedBy: req.logInid,
             activityName: 'Updated',
-            oldData: old,
-            newData: newData,
+            oldData: oldWebsiteData,
+            newData: updatedData,
             details: 'Updated ' + updatedFields + ' Fields.',
             time: checkUpdate.updatedAt
         }

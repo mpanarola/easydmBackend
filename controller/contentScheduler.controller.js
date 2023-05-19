@@ -94,7 +94,7 @@ exports.updateContentScheduler = async (req, res) => {
         if (!req.body.hasOwnProperty('webpage') && req.body.hasOwnProperty('assignedBy') && !req.body.hasOwnProperty('writtenBy')) {
             oldSchedulerData = await ContentScheduler.findById(req.params.id).select(fieldList)
                 .populate('assignedBy', 'name email')
-            oldSchedulerData._doc.assignedBy = oldSchedulerData.assignedBy.nam
+            oldSchedulerData._doc.assignedBy = oldSchedulerData.assignedBy.name
         }
         if (!req.body.hasOwnProperty('webpage') && !req.body.hasOwnProperty('assignedBy') && req.body.hasOwnProperty('writtenBy')) {
             oldSchedulerData = await ContentScheduler.findById(req.params.id).select(fieldList)
