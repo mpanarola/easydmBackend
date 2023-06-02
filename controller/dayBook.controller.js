@@ -2,23 +2,32 @@ const DayBook = require('../model/DayBook')
 const Activity = require('../model/ActivityDayBook')
 const paginate = require('../helper/paginate')
 const mongoose = require('mongoose')
-const moment = require('moment')
+const monthYearWiseData = require('../helper/monthYearWiseData')
+const ContentScheduler = require('../model/ContentScheduler')
 
 exports.createDayBook = async (req, res) => {
     try {
-        let dayBookData = req.body.data
-        dayBookData.forEach(async (element) => {
-            element.addedBy = req.logInid
-            const dayBook = await DayBook.create(element)
-            const activityData = {
-                dayBookId: dayBook._id,
-                addedBy: req.logInid,
-                details: 'Day Book Created.',
-                time: dayBook.createdAt
-            }
-            await Activity.create(activityData)
-            return res.json({ data: [dayBook], status: true, message: 'Day book created successfully!!' })
-        });
+        if (req.body && req.body.hasOwnProperty('data')) {
+            let dayBookData = req.body.data
+            dayBookData.forEach(async (element) => {
+                if (element.contentScheduler) {
+                    const getCS = await ContentScheduler.findById(element.contentScheduler)
+                    element.webpage = getCS.webpage
+                }
+                element.addedBy = req.logInid
+                const dayBook = await DayBook.create(element)
+                const activityData = {
+                    dayBookId: dayBook._id,
+                    addedBy: req.logInid,
+                    details: 'Day Book Created.',
+                    time: dayBook.createdAt
+                }
+                await Activity.create(activityData)
+            });
+            return res.json({ data: [], status: true, message: 'Day book created successfully!!' })
+        }
+        return res.json({ data: [], status: false, message: 'Kindly enter data!!' })
+
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -58,8 +67,8 @@ exports.updateDayBook = async (req, res) => {
             time: checkBook.updatedAt
         }
         await Activity.create(activityData)
-        const newData = await DayBook.findById(req.params.id)
-        return res.json({ data: [newData], status: true, message: 'Day Book updated!!' })
+        const updatedData = await DayBook.findById(req.params.id)
+        return res.json({ data: [updatedData], status: true, message: 'Day Book updated!!' })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -129,9 +138,19 @@ exports.getDayBook = async (req, res) => {
             },
             {
                 $unwind: '$webPageData'
+            },
+            {
+                $lookup: {
+                    from: 'ContentScheduler',
+                    localField: 'contentScheduler',
+                    foreignField: '_id',
+                    as: 'contentSchedulerData',
+                }
+            },
+            {
+                $unwind: '$contentSchedulerData'
             }
         ]
-
         if (req.body && req.body.hasOwnProperty('search')) {
             if (req.body.search.dateFrom) {
                 if (!req.body.search.dateTo) {
@@ -149,7 +168,7 @@ exports.getDayBook = async (req, res) => {
                             $match: {
                                 $and: [
                                     { 'creationDate': { $gte: new Date(req.body.search.dateFrom) } },
-                                    { 'creationDate': { $lt: new Date(dateTo) } }
+                                    { 'creationDate': { $lte: new Date(dateTo) } }
                                 ]
                             }
                         }
@@ -177,6 +196,8 @@ exports.getDayBook = async (req, res) => {
                             "webpageName": "$webPageData.webpage",
                             "webpageURL": "$webPageData.webpageUrl",
                             "webpage": "$webpage",
+                            "contentScheduler": "$contentScheduler",
+                            "contentSchedulerTitle": "$contentSchedulerData.topicTitle",
                             "createdAt": "$createdAt"
                         }
                     }
@@ -193,7 +214,6 @@ exports.getDayBook = async (req, res) => {
         let page = (pageNo) ? parseInt(pageNo) : 1
         let limit = (perPage) ? parseInt(perPage) : 50
         let skip = (page - 1) * limit
-
         let endIndex = page * limit
         if (endIndex < totalData) {
             endIndex = page * limit
@@ -210,6 +230,7 @@ exports.getDayBook = async (req, res) => {
         return res.status(200).json({ data: [DayBookData, Pagination], status: true, message: "Data Listed Successfully" })
 
     } catch (error) {
+        console.log('Error ==>', error)
         return res.json({ data: [], status: false, message: error.message })
     }
 }
@@ -283,6 +304,17 @@ exports.userDateWiseDayBook = async (req, res) => {
             },
             {
                 $unwind: '$webPageData'
+            },
+            {
+                $lookup: {
+                    from: 'ContentScheduler',
+                    localField: 'contentScheduler',
+                    foreignField: '_id',
+                    as: 'contentSchedulerData',
+                }
+            },
+            {
+                $unwind: '$contentSchedulerData'
             }
         ]
         if (req.body && req.body.hasOwnProperty('search')) {
@@ -329,6 +361,8 @@ exports.userDateWiseDayBook = async (req, res) => {
                         "webpageName": "$webPageData.webpage",
                         "webpageURL": "$webPageData.webpageUrl",
                         "webpage": "$webpage",
+                        "contentScheduler": "$contentScheduler",
+                        "contentSchedulerTitle": "$contentSchedulerData.topicTitle",
                         "createdAt": "$createdAt"
                     }
                 }
@@ -361,7 +395,6 @@ exports.userDateWiseDayBook = async (req, res) => {
         return res.status(200).json({ data: [DayBookData, Pagination], status: true, message: "Data Listed Successfully" })
 
     } catch (error) {
-        console.log('Error ==>', error)
         return res.json({ data: [], status: false, message: error.message })
     }
 }
@@ -445,6 +478,7 @@ exports.userDayBookActivity = async (req, res) => {
                             "category": "$category",
                             "member": "$addedBy",
                             "webpage": "$webpage",
+                            "contentScheduler": "$contentScheduler",
                             "createdAt": "$createdAt"
                         }
                     }
@@ -452,26 +486,8 @@ exports.userDayBookActivity = async (req, res) => {
             }
         )
         const DayBookData = await DayBook.aggregate(query)
-        const date = new Date();
-        const firstDay = new Date(date.getFullYear(), date.getMonth(), 1)
-        var dateFrom = moment(firstDay).subtract(1, 'years')
-        let lastMOnth, historyData = []
-        for (let i = 1; i <= 12; i++) {
-            let nextMonth = moment(dateFrom).add(i, 'months')
-            lastMOnth = moment(nextMonth).subtract(1, 'months')
-            const month = moment(lastMOnth).format('MMM').toString();
-            const year = moment(lastMOnth).format('YYYY').toString();
-            let hoursCnt = 0
-            DayBookData.forEach(element => {
-                element.info.forEach(element1 => {
-                    if (element1.creationDate >= lastMOnth && element1.creationDate <= nextMonth) {
-                        hoursCnt = hoursCnt + element1.hours
-                    }
-                });
-            });
-            historyData.push({ month: `${month}-${year}`, totalHours: hoursCnt })
-        }
-        return res.status(200).json({ data: [historyData], status: true, message: "All user's the day book data" })
+        const finalData = await monthYearWiseData.month_year_wise_data(DayBookData, "creationDate", "hours")
+        return res.status(200).json({ data: finalData, status: true, message: "All user's the day book data" })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
