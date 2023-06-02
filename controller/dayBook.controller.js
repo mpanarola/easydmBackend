@@ -17,8 +17,8 @@ exports.createDayBook = async (req, res) => {
                 time: dayBook.createdAt
             }
             await Activity.create(activityData)
+            return res.json({ data: [dayBook], status: true, message: 'Day book created successfully!!' })
         });
-        return res.json({ data: [], status: true, message: 'Day book created successfully!!' })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -58,8 +58,8 @@ exports.updateDayBook = async (req, res) => {
             time: checkBook.updatedAt
         }
         await Activity.create(activityData)
-        const n = await DayBook.findById(req.params.id)
-        return res.json({ data: [n], status: true, message: 'Day Book updated!!' })
+        const newData = await DayBook.findById(req.params.id)
+        return res.json({ data: [newData], status: true, message: 'Day Book updated!!' })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -113,17 +113,6 @@ exports.getDayBook = async (req, res) => {
                     from: 'User',
                     localField: 'addedBy',
                     foreignField: '_id',
-                    pipeline: [
-                        {
-                            $match: {
-                                $expr: {
-                                    $and: [
-                                        { $eq: ["$isDeleted", false] },
-                                    ]
-                                }
-                            }
-                        }
-                    ],
                     as: 'userData',
                 }
             },
@@ -142,6 +131,7 @@ exports.getDayBook = async (req, res) => {
                 $unwind: '$webPageData'
             }
         ]
+
         if (req.body && req.body.hasOwnProperty('search')) {
             if (req.body.search.dateFrom) {
                 if (!req.body.search.dateTo) {
@@ -152,12 +142,14 @@ exports.getDayBook = async (req, res) => {
                     )
                 }
                 else {
+                    var dateTo = new Date(req.body.search.dateTo)
+                    dateTo.setDate(dateTo.getDate() + 1);
                     query.push(
                         {
                             $match: {
                                 $and: [
                                     { 'creationDate': { $gte: new Date(req.body.search.dateFrom) } },
-                                    { 'creationDate': { $lte: new Date(req.body.search.dateTo) } }
+                                    { 'creationDate': { $lt: new Date(dateTo) } }
                                 ]
                             }
                         }
@@ -165,7 +157,6 @@ exports.getDayBook = async (req, res) => {
                 }
             }
         }
-        query.push({ $sort: { createdAt: -1 } })
         query.push(
             {
                 $group:
@@ -276,17 +267,6 @@ exports.userDateWiseDayBook = async (req, res) => {
                     from: 'User',
                     localField: 'addedBy',
                     foreignField: '_id',
-                    pipeline: [
-                        {
-                            $match: {
-                                $expr: {
-                                    $and: [
-                                        { $eq: ["$isDeleted", false] },
-                                    ]
-                                }
-                            }
-                        }
-                    ],
                     as: 'userData',
                 }
             },
@@ -303,9 +283,6 @@ exports.userDateWiseDayBook = async (req, res) => {
             },
             {
                 $unwind: '$webPageData'
-            },
-            {
-                $sort: { createdAt: -1 }
             }
         ]
         if (req.body && req.body.hasOwnProperty('search')) {
@@ -318,12 +295,14 @@ exports.userDateWiseDayBook = async (req, res) => {
                     )
                 }
                 else {
+                    var dateTo = new Date(req.body.search.dateTo)
+                    dateTo.setDate(dateTo.getDate() + 1);
                     query.push(
                         {
                             $match: {
                                 $and: [
                                     { 'creationDate': { $gte: new Date(req.body.search.dateFrom) } },
-                                    { 'creationDate': { $lte: new Date(req.body.search.dateTo) } }
+                                    { 'creationDate': { $lte: new Date(dateTo) } }
                                 ]
                             }
                         }
@@ -382,6 +361,7 @@ exports.userDateWiseDayBook = async (req, res) => {
         return res.status(200).json({ data: [DayBookData, Pagination], status: true, message: "Data Listed Successfully" })
 
     } catch (error) {
+        console.log('Error ==>', error)
         return res.json({ data: [], status: false, message: error.message })
     }
 }
@@ -415,17 +395,6 @@ exports.userDayBookActivity = async (req, res) => {
                     from: 'User',
                     localField: 'addedBy',
                     foreignField: '_id',
-                    pipeline: [
-                        {
-                            $match: {
-                                $expr: {
-                                    $and: [
-                                        { $eq: ["$isDeleted", false] },
-                                    ]
-                                }
-                            }
-                        }
-                    ],
                     as: 'userData',
                 }
             },
@@ -443,12 +412,14 @@ exports.userDayBookActivity = async (req, res) => {
                     )
                 }
                 else {
+                    var dateTo = new Date(req.body.search.dateTo)
+                    dateTo.setDate(dateTo.getDate() + 1);
                     query.push(
                         {
                             $match: {
                                 $and: [
                                     { 'creationDate': { $gte: new Date(req.body.search.dateFrom) } },
-                                    { 'creationDate': { $lte: new Date(req.body.search.dateTo) } }
+                                    { 'creationDate': { $lte: new Date(dateTo) } }
                                 ]
                             }
                         }
@@ -456,11 +427,6 @@ exports.userDayBookActivity = async (req, res) => {
                 }
             }
         }
-        query.push(
-            {
-                $sort: { 'createdAt': -1 }
-            }
-        )
         query.push(
             {
                 $group:
