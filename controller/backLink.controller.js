@@ -1,4 +1,5 @@
 const BackLinks = require('../model/BackLinks')
+const Website = require('../model/Website')
 const Activity = require('../model/ActivityBackLinks')
 const ContentScheduler = require('../model/ContentScheduler')
 const paginate = require('../helper/paginate')
@@ -7,13 +8,20 @@ const paginate = require('../helper/paginate')
 exports.checkBackLinks = async (req, res) => {
     try {
         const backLinkData = { ...req.body }
-        if (backLinkData.domain && backLinkData.domain !== null) {
-            const oldData = await BackLinks.findOne({ $and: [{ domain: backLinkData.domain }, { directUrl: backLinkData.directUrl }] })
+        let conditionArray = [{ domain: backLinkData.domain }]
+        if (backLinkData.webpage) {
+            conditionArray.push({ webpage: backLinkData.webpage })
+        }
+        if (backLinkData.contentScheduler && backLinkData.contentScheduler !== null) {
+            conditionArray.push({ contentScheduler: backLinkData.contentScheduler })
+        }
+        if (conditionArray.length === 2) {
+            const oldData = await BackLinks.find({ $and: conditionArray })
             if (oldData) {
-                return res.json({ data: [oldData], status: true, message: "D Pass found.  or data no hoy to ID Pass not found." })
+                return res.json({ data: [oldData], status: true, message: "ID Password found!!" })
             }
         }
-        return res.json({ data: [], status: true, message: "New Back Link data!!" })
+        return res.json({ data: [], status: true, message: "ID Password not found!!" })
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
@@ -22,7 +30,14 @@ exports.checkBackLinks = async (req, res) => {
 exports.createBackLinks = async (req, res) => {
     try {
         const backLinkData = { ...req.body }
-        const oldData = await BackLinks.findOne({ $and: [{ domain: backLinkData.domain }, { directUrl: backLinkData.directUrl }, { date: backLinkData.date }] })
+        let conditionArray = [{ domain: backLinkData.domain }, { date: backLinkData.date }]
+        if (backLinkData.webpage) {
+            conditionArray.push({ webpage: backLinkData.webpage })
+        }
+        if (backLinkData.contentScheduler && backLinkData.contentScheduler !== null) {
+            conditionArray.push({ contentScheduler: backLinkData.contentScheduler })
+        }
+        const oldData = await BackLinks.findOne({ $and: conditionArray })
         if (oldData) {
             return res.json({ data: [], status: false, message: "BackLink already exists with the same domain!!" })
         }
@@ -60,15 +75,38 @@ exports.updateBackLinks = async (req, res) => {
             return res.json({ data: [], status: true, message: "Cannot update empty object!!" })
         }
         const updatedFields = [], updatedValues = []
-        let fieldList = ['-_id']
-        Object.keys(req.body).forEach(function (fields) {
-            fieldList.push(fields)
-            updatedFields.push(' ' + fields)
-        })
-        Object.values(req.body).forEach(function (value) {
-            updatedValues.push(value)
-        })
+        let fieldList = []
+
+        for (const [keys, value] of Object.entries(req.body)) {
+            let finalValue = value
+            fieldList.push(keys)
+            updatedFields.push(' ' + keys)
+            if (keys === 'webpage') {
+                const webdata = await Website.findById(value)
+                finalValue = webdata.webpage
+            }
+            if (keys === 'contentScheduler') {
+                const contentdata = await ContentScheduler.findById(value)
+                finalValue = contentdata.topicTitle
+            }
+            updatedValues.push(finalValue)
+        }
+        let newDataObject = {}
+        fieldList.forEach((element, index) => {
+            newDataObject[element] = updatedValues[index];
+        });
+
+        fieldList.push('-_id')
         const oldLinkData = await BackLinks.findById(req.params.id).select(fieldList)
+        let oldDataObject = { ...oldLinkData._doc }
+        if (oldLinkData.contentScheduler && oldLinkData.contentScheduler !== null) {
+            const checkData = await ContentScheduler.findById(oldLinkData.contentScheduler)
+            oldDataObject.contentScheduler = checkData.topicTitle
+        }
+        if (oldLinkData.webpage) {
+            const checkData = await Website.findById(oldLinkData.webpage)
+            oldDataObject.webpage = checkData.webpage
+        }
         const updateLink = await BackLinks.findByIdAndUpdate(req.params.id, linkData)
         if (!updateLink) {
             return res.json({ data: [], status: false, message: 'Not able to update Content Scheduler!!' })
@@ -77,8 +115,8 @@ exports.updateBackLinks = async (req, res) => {
             backLinksId: checkLink._id,
             addedBy: req.logInid,
             activityName: 'Updated',
-            oldData: oldLinkData,
-            newData: linkData,
+            oldData: oldDataObject,
+            newData: newDataObject,
             details: 'Updated ' + updatedFields + ' Fields.',
             time: checkLink.updatedAt,
             date: linkData.date
@@ -134,8 +172,11 @@ exports.getBackLinks = async (req, res) => {
             option['query'] = {};
         }
         option.query['isDeleted'] = false
+        if (option.query.hasOwnProperty('date')) {
+            let latestDate = new Date(option.query.date.$lte)
+            option.query.date.$lte = latestDate.setDate(latestDate.getDate() + 1)
+        }
         const backLinks = await paginate(option, BackLinks);
-
         for (const element of backLinks.list) {
             let contentTitle = null
             if (element.contentScheduler !== null) {
@@ -144,7 +185,7 @@ exports.getBackLinks = async (req, res) => {
             }
             element.contentTopicTitle = contentTitle
         }
-        return res.json({ data: backLinks, status: true, message: "Data Listed Successfully" });
+        return res.json({ data: [backLinks], status: true, message: "Data Listed Successfully" });
     } catch (error) {
         return res.json({ data: [], status: false, message: error.message })
     }
