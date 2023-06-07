@@ -16,7 +16,7 @@ exports.checkBackLinks = async (req, res) => {
             conditionArray.push({ contentScheduler: backLinkData.contentScheduler })
         }
         if (conditionArray.length === 2) {
-            const oldData = await BackLinks.find({ $and: conditionArray })
+            const oldData = await BackLinks.findOne({ $and: conditionArray }).sort({ createdAt: -1 })
             if (oldData) {
                 return res.json({ data: [oldData], status: true, message: "ID Password found!!" })
             }
