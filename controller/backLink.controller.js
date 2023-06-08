@@ -71,12 +71,13 @@ exports.updateBackLinks = async (req, res) => {
             return res.json({ data: [], status: false, message: "This back link is not exist!!" })
         }
         const linkData = { ...req.body }
-        if (Object.keys(linkData).length === 0) {
+        if (Object.keys(linkData).length === 1 && req.body.hasOwnProperty('flag')) {
             return res.json({ data: [], status: true, message: "Cannot update empty object!!" })
         }
         const updatedFields = [], updatedValues = []
         let fieldList = []
 
+        delete req.body.flag
         for (const [keys, value] of Object.entries(req.body)) {
             let finalValue = value
             fieldList.push(keys)
@@ -86,8 +87,13 @@ exports.updateBackLinks = async (req, res) => {
                 finalValue = webdata.webpage
             }
             if (keys === 'contentScheduler') {
-                const contentdata = await ContentScheduler.findById(value)
-                finalValue = contentdata.topicTitle
+                if (value !== null) {
+                    const contentdata = await ContentScheduler.findById(value)
+                    finalValue = contentdata.topicTitle
+                }
+                else {
+                    finalValue = null
+                }
             }
             updatedValues.push(finalValue)
         }
@@ -97,19 +103,47 @@ exports.updateBackLinks = async (req, res) => {
         });
 
         fieldList.push('-_id')
+        console.log('Data ==>', fieldList)
+        for (let i = 0; i < fieldList.length; i++) {
+            const element = fieldList[i];
+            if (element === 'contentScheduler' && newDataObject.category !== 'Blogs') {
+                fieldList.push('webpage')
+            }
+        }
         const oldLinkData = await BackLinks.findById(req.params.id).select(fieldList)
         let oldDataObject = { ...oldLinkData._doc }
         if (oldLinkData.contentScheduler && oldLinkData.contentScheduler !== null) {
             const checkData = await ContentScheduler.findById(oldLinkData.contentScheduler)
             oldDataObject.contentScheduler = checkData.topicTitle
         }
-        if (oldLinkData.webpage) {
+        if (oldLinkData.webpage && oldLinkData.contentScheduler === null) {
             const checkData = await Website.findById(oldLinkData.webpage)
             oldDataObject.webpage = checkData.webpage
         }
+        if (oldLinkData.webpage && oldLinkData.contentScheduler !== null) {
+            oldDataObject.webpage = null
+        }
+        if (newDataObject.category !== "Blogs" && oldLinkData.category !== "Blogs" && oldLinkData.contentScheduler === null) {
+            delete oldDataObject.contentScheduler
+        }
+        if (newDataObject.category !== "Blogs" && oldDataObject.category !== "Blogs") {
+            delete newDataObject.contentScheduler
+        }
+
         const updateLink = await BackLinks.findByIdAndUpdate(req.params.id, linkData)
         if (!updateLink) {
             return res.json({ data: [], status: false, message: 'Not able to update Content Scheduler!!' })
+        }
+        console.log('Falg Data ==>', linkData.flag)
+        if (linkData.flag === 0) {
+            if (oldDataObject.category !== "Blogs" && newDataObject.category !== "Blogs") {
+                delete oldDataObject.category
+                delete oldDataObject.contentScheduler
+                delete newDataObject.category
+                delete newDataObject.contentScheduler
+            }
+            delete oldDataObject.category
+            delete newDataObject.category
         }
         const activityData = {
             backLinksId: checkLink._id,
